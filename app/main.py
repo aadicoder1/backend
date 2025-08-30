@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from app.database import Base, engine
+from app import models  
 from app.models import user
 from app.routes import user as user_routes
 from app.routes import auth as auth_routes
 
+# Create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="KMRL SmartDocs Backend")
@@ -14,4 +16,4 @@ app.include_router(auth_routes.router)
 
 @app.get("/")
 def root():
-    return {"msg": "Backend running with PostgreSQL 🚀"}
+    return {"message": "KMRL SmartDocs backend is running 🚀"}
