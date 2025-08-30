@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
 from app.models.user import User
-from app.core.security import get_password_hash, verify_password, create_access_token
+from app.core.security import hash_password, verify_password, create_access_token
 
 router = APIRouter()
 
@@ -27,7 +27,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Username already registered")
     new_user = User(
         username=user.username,
-        hashed_password=get_password_hash(user.password)
+        hashed_password=hash_password(user.password)
     )
     db.add(new_user)
     db.commit()
