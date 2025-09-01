@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document - KMRL SmartDocs</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      text-align: center;
+      max-width: 500px;
+      width: 100%;
+    }
+    h2 {
+      color: #005baa;
+      margin-bottom: 20px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+    .btn.open { background: #005baa; color: white; }
+    .btn.open:hover { background: #004080; }
+    .btn.summarize { background: #008c4a; color: white; }
+    .btn.summarize:hover { background: #006837; }
+    .btn.close { background: #ccc; }
+    .btn.close:hover { background: #aaa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="docTitle">Document</h2>
+    <button class="btn open" onclick="openDoc()">📂 Open Document</button>
+    <button class="btn summarize" onclick="summarizeDoc()">📄 Summarize</button>
+    <button class="btn close" onclick="closeDoc()">❌ Close</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get("id") || "Unknown";
+
+    document.getElementById("docTitle").innerText = "Document ID: " + docId;
+
+    function openDoc() {
+      alert("📂 Opening document " + docId);
+    }
+
+    function summarizeDoc() {
+      alert("📄 Summary of document " + docId + " (dummy for now)");
+      // Later: call backend summarizer API
+    }
+
+    function closeDoc() {
+      window.location.href = "dashboard.html";
+    }
+  </script>
+</body>
+</html>

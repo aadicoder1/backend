@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - KMRL SmartDocs</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+    }
+    .header {
+      background: #005baa;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+    .logout-btn {
+      background: white;
+      color: #005baa;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #005baa;
+    }
+    .section {
+      margin-bottom: 25px;
+    }
+    .notification {
+      background: #e8f1ff;
+      padding: 10px;
+      border-left: 4px solid #005baa;
+      margin-bottom: 8px;
+      border-radius: 5px;
+    }
+    .document-list {
+      list-style: none;
+      padding: 0;
+    }
+    .document-list li {
+      padding: 10px;
+      margin: 8px 0;
+      background: #f2f2f2;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .doc-link {
+      color: #005baa;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .upload-box {
+      display: flex;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>KMRL SmartDocs Dashboard</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="container">
+    <div class="section">
+      <h2>🔔 Notifications</h2>
+      <div class="notification">New policy document uploaded</div>
+      <div class="notification">Reminder: Submit monthly report</div>
+    </div>
+
+    <div class="section">
+      <h2>📤 Upload a Document</h2>
+      <div class="upload-box">
+        <input type="file" id="fileInput">
+        <button onclick="uploadDocument()">Upload</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📂 Your Documents</h2>
+      <ul class="document-list" id="docList">
+        <!-- Docs will load here -->
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // After login, redirect here with ?user=username
+    const params = new URLSearchParams(window.location.search);
+    const username = params.get("user") || "User";
+
+    document.querySelector(".header h1").innerText = "Welcome, " + username;
+
+    // Dummy documents for now
+    const documents = [
+      {id: 1, name: "KMRL Report.pdf"},
+      {id: 2, name: "Financial Summary.xlsx"},
+      {id: 3, name: "Safety Guidelines.docx"}
+    ];
+
+    const docList = document.getElementById("docList");
+    documents.forEach(doc => {
+      const li = document.createElement("li");
+      li.innerHTML = `<span>${doc.name}</span> <a class="doc-link" href="document.html?id=${doc.id}">View</a>`;
+      docList.appendChild(li);
+    });
+
+    function uploadDocument() {
+      const fileInput = document.getElementById("fileInput");
+      if (!fileInput.files.length) {
+        alert("Please select a file!");
+        return;
+      }
+      alert("✅ " + fileInput.files[0].name + " uploaded successfully (dummy)");
+      // Later: send to backend using fetch FormData
+    }
+
+    function logout() {
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>

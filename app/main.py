@@ -3,7 +3,8 @@ from app.database import Base, engine
 from app import models  
 from app.models import user
 from app.routes import user 
-from app.routes import auth, docs
+from app.routes import auth, document
+from fastapi.staticfiles import StaticFiles
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -15,7 +16,9 @@ app.include_router(user.router, prefix="/users", tags=["users"])
 app.include_router(auth.router)
 
 app.include_router(auth.router)
-app.include_router(docs.router)
+app.include_router(document.router)
+
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 
 @app.get("/")
 def root():

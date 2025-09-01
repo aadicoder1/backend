@@ -12,4 +12,4 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
 
-    documents = relationship("Document", back_populates="uploader")
+    documents = relationship("Document", back_populates="user")

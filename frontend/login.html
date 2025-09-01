@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - KMRL</title>
+
+  <style>
+    /* ---------- LOGIN PAGE STYLING ---------- */
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(to right, #005baa, #0077cc);
+      font-family: Arial, sans-serif;
+    }
+
+    .login-container {
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      width: 350px;
+    }
+
+    .login-title {
+      color: #005baa;
+      margin-bottom: 10px;
+    }
+
+    .login-subtitle {
+      font-size: 16px;
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    .login-form input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      background: #005baa;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .login-btn:hover {
+      background: #004080;
+    }
+
+    .login-footer {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .login-footer a {
+      color: #005baa;
+      text-decoration: none;
+    }
+
+    .login-footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <h1 class="login-title">KMRL SmartDocs</h1>
+    <h2 class="login-subtitle">Sign in to your account</h2>
+
+    <form id="loginForm" class="login-form" onsubmit="login(event)">
+
+      <input type="text" id="username" placeholder="Username" required>
+      <input type="password" id="password" placeholder="Password" required>
+      <button type="submit" class="login-btn">Login</button>
+    </form>
+
+    <p class="login-footer">
+      Don’t have an account? <a href="/frontend/register.html">Register</a>
+    </p>
+  </div>
+
+<script>
+  async function login(event) {
+    event.preventDefault();
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (response.ok) {
+        window.location.href = `dashboard.html?user=${encodeURIComponent(username)}`;
+      } else {
+        const data = await response.json();
+        alert("Login failed: " + (data.detail || "Invalid credentials"));
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
+
+  // ✅ Attach event listener
+  document.getElementById("loginForm").addEventListener("submit", login);
+</script>
+
+
+</body>
+</html>
