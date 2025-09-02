@@ -1,102 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Register - KMRL</title>
-
   <style>
-    body {
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background: linear-gradient(to right, #005baa, #0077cc);
-      font-family: Arial, sans-serif;
-    }
-
-    .register-container {
-      background: #fff;
-      padding: 40px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      text-align: center;
-      width: 350px;
-    }
-
-    .register-title {
-      color: #005baa;
-      margin-bottom: 10px;
-    }
-
-    .register-subtitle {
-      font-size: 16px;
-      color: #444;
-      margin-bottom: 20px;
-    }
-
-    .register-form input, .register-form select {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-
-    .register-btn {
-      width: 100%;
-      padding: 12px;
-      background: #005baa;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .register-btn:hover {
-      background: #004080;
-    }
-
-    .register-footer {
-      margin-top: 15px;
-      font-size: 14px;
-    }
-
-    .register-footer a {
-      color: #005baa;
-      text-decoration: none;
-    }
-
-    .register-footer a:hover {
-      text-decoration: underline;
-    }
-
-    #message {
-      margin-top: 10px;
-      font-size: 14px;
-      color: red;
-    }
+    body { margin:0; display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(to right,#005baa,#0077cc); font-family:Arial,sans-serif; }
+    .register-container { background:#fff; padding:40px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,.2); text-align:center; width:360px; }
+    .register-title { color:#005baa; margin-bottom:10px; }
+    .register-subtitle { font-size:16px; color:#444; margin-bottom:20px; }
+    .register-form input, .register-form select { width:100%; padding:12px; margin:10px 0; border:1px solid #ccc; border-radius:8px; font-size:14px; }
+    .register-btn { width:100%; padding:12px; background:#005baa; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer; transition:.3s; }
+    .register-btn:hover { background:#004080; }
+    .register-footer { margin-top:15px; font-size:14px; }
+    .register-footer a { color:#005baa; text-decoration:none; }
+    .register-footer a:hover { text-decoration:underline; }
+    #message { margin-top:10px; font-size:14px; color:red; white-space:pre-wrap; text-align:left; }
   </style>
 </head>
 <body>
-
   <div class="register-container">
     <h1 class="register-title">KMRL SmartDocs</h1>
     <h2 class="register-subtitle">Create a new account</h2>
 
-    <form id="registerForm" class="register-form">
-      <input type="text" id="username" placeholder="Username" required>
-      <input type="password" id="password" placeholder="Password" required>
-      
+    <form id="registerForm" class="register-form" autocomplete="off">
+      <input type="text" id="username" placeholder="Username" required />
+      <input type="text" id="full_name" placeholder="Full Name" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+
       <select id="role" required>
-        <option value="">Select Role</option>
-        <option value="Employee">Employee</option>
-        <option value="Admin">Admin</option>
-      </select>
+  <option value="">Select Role</option>
+  <option value="Assistant Manager">Assistant Manager</option>
+  <option value="Manager">Manager</option>
+  <option value="Deputy General Manager">Deputy General Manager</option>
+  <option value="General Manager">General Manager</option>
+  <option value="Executive">Executive</option>
+  <option value="Junior Engineer">Junior Engineer</option>
+  <option value="Station Controller">Station Controller</option>
+  <option value="Apprentice">Apprentice</option>
+  <option value="Additional Section Engineer (Power & Traction)">Additional Section Engineer (Power & Traction)</option>
+  <option value="Addl. General Manager (Operations & Maintenance)">Addl. General Manager (Operations & Maintenance)</option>
+  <option value="Executive (Civil) – Water Transport">Executive (Civil) – Water Transport</option>
+  <option value="Executive (Marine)">Executive (Marine)</option>
+  <option value="Safety Officer">Safety Officer</option>
+  <option value="Finance Officer">Finance Officer</option>
+  <option value="HR Executive">HR Executive</option>
+</select>
+
 
       <button type="submit" class="register-btn">Register</button>
     </form>
@@ -105,42 +59,63 @@
       Already have an account? <a href="login.html">Login</a>
     </p>
 
-    <p id="message"></p>
+    <pre id="message"></pre>
   </div>
 
   <script>
-    document.getElementById("registerForm").addEventListener("submit", async (event) => {
-      event.preventDefault();
+  const msg = document.getElementById("message");
 
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-      const role = document.getElementById("role").value;
+  document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
+    // Build payload from form inputs
+    const payload = {
+      username: document.getElementById("username").value.trim(),
+      full_name: document.getElementById("full_name").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      password: document.getElementById("password").value,
+      role: document.getElementById("role").value
+    };
+
+    // Show submitting message
+    msg.style.color = "inherit";
+    msg.textContent = "Submitting…\n" + JSON.stringify(payload, null, 2);
+
+    try {
+      // Use relative path for backend API
+      const res = await fetch("http://127.0.0.1:8000/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify(payload)
+      });
+
+      let data;
       try {
-        const response = await fetch("http://127.0.0.1:8000/auth/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ username, password, role })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          document.getElementById("message").style.color = "green";
-          document.getElementById("message").innerText = "✅ Registration successful! Redirecting to login...";
-          setTimeout(() => {
-            window.location.href = "login.html";
-          }, 2000);
-        } else {
-          document.getElementById("message").innerText = "Registration failed: " + (data.detail || "Try again");
-        }
-      } catch (err) {
-        document.getElementById("message").innerText = "Error: " + err.message;
+        data = await res.json();
+      } catch {
+        data = { raw: await res.text() };
       }
-    });
-  </script>
+
+      if (res.ok) {
+        msg.style.color = "green";
+        msg.textContent = "✅ Registration successful! Redirecting to login…";
+        setTimeout(() => {
+          window.location.href = "/frontend/login.html";
+        }, 1500);
+      } else {
+        // Show detailed error response
+        msg.style.color = "red";
+        msg.textContent =
+          "Registration failed.\n\nStatus: " + res.status +
+          "\n\nServer response:\n" + JSON.stringify(data, null, 2);
+      }
+    } catch (err) {
+      msg.style.color = "red";
+      msg.textContent = "Network error:\n" + err.message;
+    }
+  });
+</script>
 
 </body>
 </html>

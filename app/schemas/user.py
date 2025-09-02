@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr
 from typing import Literal
+from pydantic import BaseModel, EmailStr
+from pydantic import ConfigDict  # v2 config
 
 class UserCreate(BaseModel):
     username: str
@@ -30,8 +31,9 @@ class UserOut(BaseModel):
     full_name: str
     email: EmailStr
     role: str
-    class Config:
-        orm_mode = True
+
+    # Pydantic v2:
+    model_config = ConfigDict(from_attributes=True)
 
 class UserLogin(BaseModel):
     username: str
