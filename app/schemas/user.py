@@ -22,7 +22,8 @@ class UserCreate(BaseModel):
         "Executive (Marine)",
         "Safety Officer",
         "Finance Officer",
-        "HR Executive"
+        "HR Executive",
+        "Admin"
     ]
 
 class UserOut(BaseModel):
