@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 from app.routes import auth, document, user  # import routers
+from fastapi.responses import FileResponse
+import os
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -29,4 +31,4 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return {"message": "KMRL SmartDocs backend is running 🚀"}
+    return FileResponse(os.path.join("frontend", "index.html"))
