@@ -1,77 +1,244 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Document - KMRL SmartDocs</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f7fa;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+    :root{
+      --blue:#005baa;
+      --blue-dark:#004080;
+      --green:#008c4a;
+      --green-dark:#006837;
+      --orange:#ff9800;
+      --orange-dark:#e68900;
+      --gray:#ccc;
+      --gray-dark:#aaa;
     }
-    .container {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      text-align: center;
-      max-width: 500px;
-      width: 100%;
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:#f5f7fa;
+      min-height:100vh;
+      display:grid;             /* grid avoids flex side-by-side issue */
+      place-items:center;       /* centers the card */
     }
-    h2 {
-      color: #005baa;
-      margin-bottom: 20px;
+    .container{
+      background:#fff;
+      padding:30px;
+      border-radius:12px;
+      box-shadow:0 4px 15px rgba(0,0,0,.2);
+      text-align:center;
+      width:min(560px, 92vw);
     }
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: 0.3s;
+    h2{ color:var(--blue); margin:0 0 20px }
+    .btn{
+      display:block; width:100%;
+      padding:12px; margin:10px 0;
+      border:none; border-radius:8px;
+      cursor:pointer; font-size:16px;
+      transition:.2s ease;
+      text-decoration:none; text-align:center;
     }
-    .btn.open { background: #005baa; color: white; }
-    .btn.open:hover { background: #004080; }
-    .btn.summarize { background: #008c4a; color: white; }
-    .btn.summarize:hover { background: #006837; }
-    .btn.close { background: #ccc; }
-    .btn.close:hover { background: #aaa; }
+    .btn.open{ background:var(--blue); color:#fff }
+    .btn.open:hover{ background:var(--blue-dark) }
+    .btn.summarize{ background:var(--green); color:#fff }
+    .btn.summarize:hover{ background:var(--green-dark) }
+    .btn.access{ background:var(--orange); color:#fff }
+    .btn.access:hover{ background:var(--orange-dark) }
+    .btn.close{ background:var(--gray); color:#000 }
+    .btn.close:hover{ background:var(--gray-dark) }
+    .pill{
+      display:inline-block; padding:4px 10px; margin:4px;
+      border-radius:999px; background:#e8f1ff; color:var(--blue);
+      font-size:12px; border:1px solid #cfe0ff;
+    }
+    /* Modal overlay (hidden by default) */
+    .modal{
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.5);
+      display:none;                       /* hidden */
+      align-items:center; justify-content:center;
+      z-index:9999;
+      padding:16px;
+    }
+    .modal.show{ display:flex }           /* show when toggled */
+    .modal-card{
+      width:min(520px, 96vw);
+      background:#fff; border-radius:12px;
+      box-shadow:0 8px 28px rgba(0,0,0,.35);
+      padding:20px;
+    }
+    .modal-card h3{ margin:0 0 10px; color:var(--blue) }
+    .roles{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px 14px; margin:8px 0 4px }
+    .row{ margin:12px 0 6px; font-weight:bold }
+    .footer{
+      display:flex; justify-content:flex-end; gap:10px; margin-top:14px
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2 id="docTitle">Document</h2>
-    <button class="btn open" onclick="openDoc()">📂 Open Document</button>
+
+    <a id="openBtn" class="btn open" target="_blank" rel="noopener">📂 Open Document</a>
     <button class="btn summarize" onclick="summarizeDoc()">📄 Summarize</button>
+    <button class="btn access" onclick="openAccessModal()">🔑 Give Access</button>
     <button class="btn close" onclick="closeDoc()">❌ Close</button>
+
+    <div id="currentAccess" style="margin-top:8px;"></div>
+  </div>
+
+  <!-- Access Modal -->
+  <div id="accessModal" class="modal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="accessTitle">
+      <h3 id="accessTitle">Give Access</h3>
+
+      <div class="row">Option 1: Let AI decide roles</div>
+      <button class="btn summarize" id="aiBtn">🤖 AI Suggest</button>
+
+      <div class="row">Option 2: Manually select roles</div>
+      <div class="roles" id="rolesBox">
+        <label><input type="checkbox" value="Admin"> Admin</label>
+        <label><input type="checkbox" value="HR Executive"> HR Executive</label>
+        <label><input type="checkbox" value="Engineer"> Engineer</label>
+        <label><input type="checkbox" value="Manager"> Manager</label>
+        <label><input type="checkbox" value="Staff"> Staff</label>
+        <label><input type="checkbox" value="Finance"> Finance</label>
+      </div>
+
+      <div class="footer">
+        <button class="btn close" id="cancelBtn">Cancel</button>
+        <button class="btn open" id="saveBtn">Save</button>
+      </div>
+    </div>
   </div>
 
   <script>
+    // ---- Setup ----
     const params = new URLSearchParams(window.location.search);
     const docId = params.get("id") || "Unknown";
 
-    document.getElementById("docTitle").innerText = "Document ID: " + docId;
+    const titleEl = document.getElementById("docTitle");
+    titleEl.textContent = "Document ID: " + docId;
 
-    function openDoc() {
-      alert("📂 Opening document " + docId);
+    // Map docId -> demo file
+    const docFiles = {
+      "1": "uploaded_docs/Annual_Report_2024.pdf",
+      "2": "files/Employee_Guidelines.docx",
+      "3": "files/Metro_Expansion_Plan.pptx",
+      "4": "files/Safety_Policy.pdf",
+      "5": "files/Budget_Report.xlsx"
+    };
+
+    // Map docId -> friendly name (for AI suggestion demo)
+    const docNames = {
+      "1": "Annual Report 2024",
+      "2": "Employee Guidelines",
+      "3": "Metro Expansion Plan",
+      "4": "Safety Policy",
+      "5": "Budget Report"
+    };
+
+    // ---- Open Document link ----
+    const openBtn = document.getElementById("openBtn");
+    if (docFiles[docId]) {
+      openBtn.href = docFiles[docId];
+    } else {
+      openBtn.href = "#";
+      openBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        alert("⚠️ File not available");
+      });
     }
 
+    // ---- Summary (demo) ----
     function summarizeDoc() {
-      alert("📄 Summary of document " + docId + " (dummy for now)");
-      // Later: call backend summarizer API
+      alert("📄 Summary of document " + docId + " (demo)");
     }
 
-    function closeDoc() {
-      window.location.href = "dashboard.html";
+    // ---- Access modal controls (robust show/hide) ----
+    const modal = document.getElementById("accessModal");
+    const rolesBox = document.getElementById("rolesBox");
+    const aiBtn = document.getElementById("aiBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const currentAccess = document.getElementById("currentAccess");
+
+    function openAccessModal(){
+      modal.classList.add("show");
+      modal.setAttribute("aria-hidden","false");
+      document.body.style.overflow = "hidden";   // prevent background scroll
+      loadSavedRoles();                           // prefill from storage
     }
+    function closeAccessModal(){
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden","true");
+      document.body.style.overflow = "";
+    }
+    window.openAccessModal = openAccessModal;     // expose to button
+
+    cancelBtn.addEventListener("click", closeAccessModal);
+    modal.addEventListener("click", (e)=>{
+      // close when clicking backdrop (but not the card)
+      if(e.target === modal) closeAccessModal();
+    });
+
+    // ---- AI suggestion (demo heuristics) ----
+    aiBtn.addEventListener("click", ()=>{
+      const name = (docNames[docId] || "").toLowerCase();
+      const suggestion = new Set();
+
+      if (name.includes("safety")) suggestion.add("Staff"), suggestion.add("Manager");
+      if (name.includes("employee") || name.includes("guidelines")) suggestion.add("HR Executive"), suggestion.add("Manager");
+      if (name.includes("budget")) suggestion.add("Finance"), suggestion.add("Admin");
+      if (name.includes("annual") || name.includes("report")) suggestion.add("Admin"), suggestion.add("Manager");
+      if (name.includes("expansion") || name.includes("plan")) suggestion.add("Engineer"), suggestion.add("Manager");
+
+      // default fallback
+      if (suggestion.size === 0) suggestion.add("Admin");
+
+      // apply ticks
+      Array.from(rolesBox.querySelectorAll('input[type="checkbox"]')).forEach(cb=>{
+        cb.checked = suggestion.has(cb.value);
+      });
+    });
+
+    // ---- Save roles to localStorage ----
+    function saveAccess(){
+      const selected = Array.from(rolesBox.querySelectorAll('input[type="checkbox"]:checked'))
+                      .map(cb => cb.value);
+      localStorage.setItem(`doc_access_${docId}`, JSON.stringify(selected));
+      renderCurrentAccess();
+      alert("✅ Access saved for Document " + docId);
+      closeAccessModal();
+    }
+    saveBtn.addEventListener("click", saveAccess);
+
+    function loadSavedRoles(){
+      const saved = JSON.parse(localStorage.getItem(`doc_access_${docId}`) || "[]");
+      Array.from(rolesBox.querySelectorAll('input[type="checkbox"]')).forEach(cb=>{
+        cb.checked = saved.includes(cb.value);
+      });
+    }
+
+    function renderCurrentAccess(){
+      const saved = JSON.parse(localStorage.getItem(`doc_access_${docId}`) || "[]");
+      if (saved.length === 0){
+        currentAccess.innerHTML = `<small><em>No access roles set yet.</em></small>`;
+        return;
+      }
+      currentAccess.innerHTML = `<div style="margin-top:12px;text-align:left">
+        <strong>Current access:</strong> ${saved.map(r=>`<span class="pill">${r}</span>`).join("")}
+      </div>`;
+    }
+
+    // initial render of access pills
+    renderCurrentAccess();
+
+    // ---- Close button ----
+    function closeDoc(){ window.location.href = "dashboard.html"; }
+    window.closeDoc = closeDoc;
   </script>
 </body>
 </html>

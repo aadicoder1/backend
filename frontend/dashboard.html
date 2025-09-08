@@ -98,46 +98,104 @@
 
     <div class="section">
       <h2>📂 Your Documents</h2>
-      <ul class="document-list" id="docList">
-        <!-- Docs will load here -->
+      <ul class="document-list">
+        <li>
+          <span>Annual Report 2024.pdf</span>
+          <a class="doc-link" href="document.html?id=1">Open</a>
+        </li>
+        <li>
+          <span>Employee Guidelines.docx</span>
+          <a class="doc-link" href="document.html?id=2">Open</a>
+        </li>
+        <li>
+          <span>Metro Expansion Plan.pptx</span>
+          <a class="doc-link" href="document.html?id=3">Open</a>
+        </li>
+        <li>
+          <span>Safety Policy.pdf</span>
+          <a class="doc-link" href="document.html?id=4">Open</a>
+        </li>
+        <li>
+          <span>Budget Report.xlsx</span>
+          <a class="doc-link" href="document.html?id=5">Open</a>
+        </li>
       </ul>
     </div>
   </div>
 
   <script>
-    // After login, redirect here with ?user=username
-    const params = new URLSearchParams(window.location.search);
-    const username = params.get("user") || "User";
+  // After login, redirect here with ?user=username
+  const params = new URLSearchParams(window.location.search);
+  const username = params.get("user") || "User";
 
-    document.querySelector(".header h1").innerText = "Welcome, " + username;
+  document.querySelector(".header h1").innerText = "Welcome, " + username;
 
-    // Dummy documents for now
-    const documents = [
-      {id: 1, name: "KMRL Report.pdf"},
-      {id: 2, name: "Financial Summary.xlsx"},
-      {id: 3, name: "Safety Guidelines.docx"}
-    ];
+  const docList = document.getElementById("docList");
 
-    const docList = document.getElementById("docList");
-    documents.forEach(doc => {
-      const li = document.createElement("li");
-      li.innerHTML = `<span>${doc.name}</span> <a class="doc-link" href="document.html?id=${doc.id}">View</a>`;
-      docList.appendChild(li);
-    });
+  // Fetch documents from backend
+  async function fetchDocuments() {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/documents/list");
+      if (!res.ok) throw new Error("Failed to fetch documents");
+      const documents = await res.json();
+      docList.innerHTML = "";
+      documents.forEach(doc => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <span>${doc.filename}</span>
+          <a class="doc-link" href="http://127.0.0.1:8000/documents/${doc.id}" target="_blank">View</a>
+          <button onclick="summarizeDoc(${doc.id})">Summarize</button>
+        `;
+        docList.appendChild(li);
+      });
+    } catch (err) {
+      console.error(err);
+      docList.innerHTML = "<li>⚠️ Could not load documents</li>";
+    }
+  }
 
-    function uploadDocument() {
-      const fileInput = document.getElementById("fileInput");
-      if (!fileInput.files.length) {
-        alert("Please select a file!");
-        return;
+  // Upload document to backend
+  async function uploadDocument() {
+    const fileInput = document.getElementById("fileInput");
+    if (!fileInput.files.length) {
+      alert("Please select a file!");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/documents/upload", {
+        method: "POST",
+        body: formData
+      });
+
+      if (res.ok) {
+        alert("✅ Upload successful!");
+        fetchDocuments();
+      } else {
+        const error = await res.text();
+        alert("❌ Upload failed: " + error);
       }
-      alert("✅ " + fileInput.files[0].name + " uploaded successfully (dummy)");
-      // Later: send to backend using fetch FormData
+    } catch (err) {
+      alert("❌ Network error: " + err.message);
     }
+  }
 
-    function logout() {
-      window.location.href = "login.html";
-    }
-  </script>
+  // Dummy summarize (later: connect with Colab API)
+  function summarizeDoc(docId) {
+    alert("AI Summary (demo): Summary for document ID " + docId);
+  }
+
+  // Logout
+  function logout() {
+    window.location.href = "login.html";
+  }
+
+  // Load documents on page load
+  fetchDocuments();
+</script>
+
 </body>
 </html>

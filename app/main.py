@@ -18,7 +18,7 @@ app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(document.router, prefix="/documents", tags=["documents"])
 
 # Serve frontend files
-app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+app.mount("/", StaticFiles(directory="frontend"), name="frontend")
 
 # Enable CORS for development
 app.add_middleware(
