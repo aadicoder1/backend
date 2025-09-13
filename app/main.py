@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-
-from app.database import Base, engine
-from app.routes import auth, document, user  # import routers
 from fastapi.responses import FileResponse
 import os
 
-# Create database tables
+from app.database import Base, engine
+from app.routes import auth, document, user  # import routers
+
+# Create database tables (only run once)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="KMRL SmartDocs Backend")
@@ -17,18 +17,19 @@ app.include_router(user.router, prefix="/users", tags=["users"])
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(document.router, prefix="/documents", tags=["documents"])
 
-# Serve frontend files
-app.mount("/", StaticFiles(directory="frontend"), name="frontend")
-
-# Enable CORS for development
+# Enable CORS for frontend (development)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # later restrict to ["http://localhost:5500"] or your domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Serve frontend static files at /static
+app.mount("/static", StaticFiles(directory="frontend"), name="frontend")
+
+# Root route → serve index.html
 @app.get("/")
 def root():
     return FileResponse(os.path.join("frontend", "index.html"))
