@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -6,14 +7,26 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate, UserOut, UserLogin
-from app.core.security import hash_password, verify_password, create_access_token
+from app.core.security import hash_password, verify_password
 
 router = APIRouter(tags=["Authentication"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
 SECRET_KEY = "supersecret"
 ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
+
+# ------------------- TOKEN CREATION -------------------
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+# ------------------- REGISTER -------------------
 @router.post("/register", response_model=UserOut)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == user.username).first():
@@ -22,7 +35,6 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Email already registered")
 
     hashed_pw = hash_password(user.password)
-
     new_user = User(
         username=user.username,
         full_name=user.full_name,
@@ -35,11 +47,16 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
+
+# ------------------- LOGIN -------------------
 @router.post("/login")
 def login(payload: UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.username == payload.username).first()
     if not db_user or not verify_password(payload.password, db_user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+        )
 
     token = create_access_token({"sub": str(db_user.id)})
     return {
@@ -49,6 +66,8 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
         "role": db_user.role,
     }
 
+
+# ------------------- GET CURRENT USER -------------------
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -62,3 +81,13 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     return user
+
+
+#---------------------------------------------------------
+
+@router.get("/me", response_model=UserOut)
+def read_current_user(current_user = Depends(get_current_user)):
+    """
+    Return the currently authenticated user (used by frontend to get username & role).
+    """
+    return current_user

@@ -19,17 +19,13 @@ app.include_router(document.router, prefix="/documents", tags=["documents"])
 
 # Enable CORS for frontend (development)
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # later restrict to ["http://localhost:5500"] or your domain
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+  CORSMiddleware,
+  allow_origins=["http://127.0.0.1:5500", "http://localhost:5500", "http://localhost:3000"],
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"],
 )
 
 # Serve frontend static files at /static
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
 
-# Root route → serve index.html
-@app.get("/")
-def root():
-    return FileResponse(os.path.join("frontend", "index.html"))

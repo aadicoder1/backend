@@ -1,20 +1,19 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
+# app/models/document.py
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
 from sqlalchemy.orm import relationship
 from app.database import Base
+from datetime import datetime
 
 class Document(Base):
     __tablename__ = "documents"
-
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=True)
+    title = Column(String, nullable=True)
+    description = Column(Text, nullable=True)
     filename = Column(String, nullable=False)
-    uploaded_at = Column(DateTime(timezone=True), server_default=func.now())
     file_path = Column(String, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    department = Column(String, nullable=True)
+    access_role = Column(String, nullable=True)
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
 
-
-    # Foreign key to User
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-
-    # Relationship back to User
     user = relationship("User", back_populates="documents")

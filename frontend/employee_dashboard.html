@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee Dashboard - KMRL SmartDocs</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; }
+    .header { background: #005baa; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { margin: 0; font-size: 22px; }
+    .logout-btn { background: white; color: #005baa; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+    .container { max-width: 900px; margin: 20px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    h2 { color: #005baa; }
+    .document-list { list-style: none; padding: 0; }
+    .document-list li { padding: 10px; margin: 8px 0; background: #f2f2f2; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+    .doc-link { color: #005baa; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Employee Dashboard</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div class="container">
+    <h2>📂 Available Documents</h2>
+    <ul class="document-list" id="docList"></ul>
+  </div>
+
+  <script>
+    async function fetchDocuments() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Login first!");
+        window.location.href = "login.html";
+        return;
+      }
+
+      try {
+        const res = await fetch("http://127.0.0.1:8000/documents", {
+          headers: { "Authorization": "Bearer " + token }
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch documents");
+
+        const docs = await res.json();
+        const list = document.getElementById("docList");
+        list.innerHTML = "";
+
+        docs.forEach(doc => {
+          const li = document.createElement("li");
+          li.innerHTML = `<a class="doc-link" href="http://127.0.0.1:8000/documents/${doc.id}" target="_blank">${doc.title}</a> 
+                          <span>(${doc.department})</span>`;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        alert("Error loading documents: " + err.message);
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      localStorage.removeItem("role");
+      window.location.href = "login.html";
+    }
+
+    fetchDocuments();
+  </script>
+</body>
+</html>

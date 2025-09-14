@@ -115,130 +115,135 @@
   </div>
 
   <script>
-    // ---- Setup ----
-    const params = new URLSearchParams(window.location.search);
-    const docId = params.get("id") || "Unknown";
+  // ---- Setup ----
+  const params = new URLSearchParams(window.location.search);
+  const docId = params.get("id") || "Unknown";
 
-    const titleEl = document.getElementById("docTitle");
-    titleEl.textContent = "Document ID: " + docId;
+  const titleEl = document.getElementById("docTitle");
+  const openBtn = document.getElementById("openBtn");
+  const currentAccess = document.getElementById("currentAccess");
+  const rolesBox = document.getElementById("rolesBox");
 
-    // Map docId -> demo file
-    const docFiles = {
-      "1": "uploaded_docs/Annual_Report_2024.pdf",
-      "2": "files/Employee_Guidelines.docx",
-      "3": "files/Metro_Expansion_Plan.pptx",
-      "4": "files/Safety_Policy.pdf",
-      "5": "files/Budget_Report.xlsx"
-    };
+  let currentDoc = null; // store metadata for AI suggestion
 
-    // Map docId -> friendly name (for AI suggestion demo)
-    const docNames = {
-      "1": "Annual Report 2024",
-      "2": "Employee Guidelines",
-      "3": "Metro Expansion Plan",
-      "4": "Safety Policy",
-      "5": "Budget Report"
-    };
-
-    // ---- Open Document link ----
-    const openBtn = document.getElementById("openBtn");
-    if (docFiles[docId]) {
-      openBtn.href = docFiles[docId];
-    } else {
+  // ---- Fetch document metadata ----
+  async function loadDocument() {
+    if (docId === "Unknown") {
+      titleEl.textContent = "❌ Invalid Document";
       openBtn.href = "#";
-      openBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        alert("⚠️ File not available");
-      });
+      return;
     }
 
-    // ---- Summary (demo) ----
-    function summarizeDoc() {
-      alert("📄 Summary of document " + docId + " (demo)");
-    }
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/documents/list`);
+      const docs = await res.json();
+      currentDoc = docs.find(d => d.id == docId);
 
-    // ---- Access modal controls (robust show/hide) ----
-    const modal = document.getElementById("accessModal");
-    const rolesBox = document.getElementById("rolesBox");
-    const aiBtn = document.getElementById("aiBtn");
-    const cancelBtn = document.getElementById("cancelBtn");
-    const saveBtn = document.getElementById("saveBtn");
-    const currentAccess = document.getElementById("currentAccess");
-
-    function openAccessModal(){
-      modal.classList.add("show");
-      modal.setAttribute("aria-hidden","false");
-      document.body.style.overflow = "hidden";   // prevent background scroll
-      loadSavedRoles();                           // prefill from storage
-    }
-    function closeAccessModal(){
-      modal.classList.remove("show");
-      modal.setAttribute("aria-hidden","true");
-      document.body.style.overflow = "";
-    }
-    window.openAccessModal = openAccessModal;     // expose to button
-
-    cancelBtn.addEventListener("click", closeAccessModal);
-    modal.addEventListener("click", (e)=>{
-      // close when clicking backdrop (but not the card)
-      if(e.target === modal) closeAccessModal();
-    });
-
-    // ---- AI suggestion (demo heuristics) ----
-    aiBtn.addEventListener("click", ()=>{
-      const name = (docNames[docId] || "").toLowerCase();
-      const suggestion = new Set();
-
-      if (name.includes("safety")) suggestion.add("Staff"), suggestion.add("Manager");
-      if (name.includes("employee") || name.includes("guidelines")) suggestion.add("HR Executive"), suggestion.add("Manager");
-      if (name.includes("budget")) suggestion.add("Finance"), suggestion.add("Admin");
-      if (name.includes("annual") || name.includes("report")) suggestion.add("Admin"), suggestion.add("Manager");
-      if (name.includes("expansion") || name.includes("plan")) suggestion.add("Engineer"), suggestion.add("Manager");
-
-      // default fallback
-      if (suggestion.size === 0) suggestion.add("Admin");
-
-      // apply ticks
-      Array.from(rolesBox.querySelectorAll('input[type="checkbox"]')).forEach(cb=>{
-        cb.checked = suggestion.has(cb.value);
-      });
-    });
-
-    // ---- Save roles to localStorage ----
-    function saveAccess(){
-      const selected = Array.from(rolesBox.querySelectorAll('input[type="checkbox"]:checked'))
-                      .map(cb => cb.value);
-      localStorage.setItem(`doc_access_${docId}`, JSON.stringify(selected));
-      renderCurrentAccess();
-      alert("✅ Access saved for Document " + docId);
-      closeAccessModal();
-    }
-    saveBtn.addEventListener("click", saveAccess);
-
-    function loadSavedRoles(){
-      const saved = JSON.parse(localStorage.getItem(`doc_access_${docId}`) || "[]");
-      Array.from(rolesBox.querySelectorAll('input[type="checkbox"]')).forEach(cb=>{
-        cb.checked = saved.includes(cb.value);
-      });
-    }
-
-    function renderCurrentAccess(){
-      const saved = JSON.parse(localStorage.getItem(`doc_access_${docId}`) || "[]");
-      if (saved.length === 0){
-        currentAccess.innerHTML = `<small><em>No access roles set yet.</em></small>`;
+      if (!currentDoc) {
+        titleEl.textContent = "❌ Document not found";
+        openBtn.href = "#";
         return;
       }
-      currentAccess.innerHTML = `<div style="margin-top:12px;text-align:left">
-        <strong>Current access:</strong> ${saved.map(r=>`<span class="pill">${r}</span>`).join("")}
-      </div>`;
+
+      // Show title + description
+      titleEl.textContent = currentDoc.title || ("Document ID: " + docId);
+
+      // Link Open button to backend route
+      openBtn.href = `http://127.0.0.1:8000/documents/${docId}`;
+
+      renderCurrentAccess();
+    } catch (err) {
+      console.error("Failed to load document:", err);
+      titleEl.textContent = "⚠️ Error loading document";
     }
+  }
 
-    // initial render of access pills
+  loadDocument();
+
+  // ---- Summary (demo) ----
+  function summarizeDoc() {
+    if (currentDoc) {
+      alert("📄 Summary of document: " + currentDoc.title);
+    } else {
+      alert("⚠️ Summary unavailable");
+    }
+  }
+
+  // ---- Access modal controls ----
+  const modal = document.getElementById("accessModal");
+  const aiBtn = document.getElementById("aiBtn");
+  const cancelBtn = document.getElementById("cancelBtn");
+  const saveBtn = document.getElementById("saveBtn");
+
+  function openAccessModal() {
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden","false");
+    document.body.style.overflow = "hidden";
+    loadSavedRoles();
+  }
+  function closeAccessModal() {
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden","true");
+    document.body.style.overflow = "";
+  }
+  window.openAccessModal = openAccessModal;
+
+  cancelBtn.addEventListener("click", closeAccessModal);
+  modal.addEventListener("click", (e)=>{
+    if(e.target === modal) closeAccessModal();
+  });
+
+  // ---- AI suggestion ----
+  aiBtn.addEventListener("click", ()=>{
+    const name = (currentDoc?.title || "").toLowerCase();
+    const suggestion = new Set();
+
+    if (name.includes("safety")) suggestion.add("Staff"), suggestion.add("Manager");
+    if (name.includes("employee") || name.includes("guidelines")) suggestion.add("HR Executive"), suggestion.add("Manager");
+    if (name.includes("budget")) suggestion.add("Finance"), suggestion.add("Admin");
+    if (name.includes("annual") || name.includes("report")) suggestion.add("Admin"), suggestion.add("Manager");
+    if (name.includes("expansion") || name.includes("plan")) suggestion.add("Engineer"), suggestion.add("Manager");
+
+    if (suggestion.size === 0) suggestion.add("Admin");
+
+    Array.from(rolesBox.querySelectorAll('input[type="checkbox"]')).forEach(cb=>{
+      cb.checked = suggestion.has(cb.value);
+    });
+  });
+
+  // ---- Save roles to localStorage ----
+  function saveAccess() {
+    const selected = Array.from(rolesBox.querySelectorAll('input[type="checkbox"]:checked'))
+                    .map(cb => cb.value);
+    localStorage.setItem(`doc_access_${docId}`, JSON.stringify(selected));
     renderCurrentAccess();
+    alert("✅ Access saved for Document " + docId);
+    closeAccessModal();
+  }
+  saveBtn.addEventListener("click", saveAccess);
 
-    // ---- Close button ----
-    function closeDoc(){ window.location.href = "dashboard.html"; }
-    window.closeDoc = closeDoc;
-  </script>
+  function loadSavedRoles() {
+    const saved = JSON.parse(localStorage.getItem(`doc_access_${docId}`) || "[]");
+    Array.from(rolesBox.querySelectorAll('input[type="checkbox"]')).forEach(cb=>{
+      cb.checked = saved.includes(cb.value);
+    });
+  }
+
+  function renderCurrentAccess() {
+    const saved = JSON.parse(localStorage.getItem(`doc_access_${docId}`) || "[]");
+    if (saved.length === 0){
+      currentAccess.innerHTML = `<small><em>No access roles set yet.</em></small>`;
+      return;
+    }
+    currentAccess.innerHTML = `<div style="margin-top:12px;text-align:left">
+      <strong>Current access:</strong> ${saved.map(r=>`<span class="pill">${r}</span>`).join("")}
+    </div>`;
+  }
+
+  // ---- Close button ----
+  function closeDoc(){ window.location.href = "dashboard.html"; }
+  window.closeDoc = closeDoc;
+</script>
+
 </body>
 </html>
