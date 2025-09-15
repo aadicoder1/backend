@@ -14,7 +14,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="KMRL SmartDocs Backend")
 
-# Include routers
+# Include routers first (before static files!)
 app.include_router(user.router, prefix="/users", tags=["users"])
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(document.router, prefix="/documents", tags=["documents"])
@@ -28,10 +28,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve frontend static files at /
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+# ---------------- Summarization Feature ----------------
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Senior roles (get dashboard.html instead of employee_dashboard.html)
+@app.get("/summarize/{doc_id}")
+async def summarize_document(doc_id: int):
+    from app.models.document import Document
+    from sqlalchemy.orm import Session
+    from app.database import SessionLocal
+
+    db: Session = SessionLocal()
+    doc = db.query(Document).filter(Document.id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    file_path = doc.file_path
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant that summarizes documents."},
+            {"role": "user", "content": f"Summarize the following document:\n\n{text}"}
+        ],
+        max_completion_tokens=250  # <-- correct param name now
+    )
+
+    summary = response.choices[0].message.content
+    return {"summary": summary}
+
+# Senior roles (dashboard switcher)
 SENIOR_ROLES = {
     "Assistant Manager",
     "Manager",
@@ -48,33 +78,5 @@ def dashboard(current_user: User = Depends(get_current_user)):
     else:
         return FileResponse(os.path.join("frontend", "employee_dashboard.html"))
 
-# ---------------- Summarization Feature ----------------
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-@app.post("/summarize")
-async def summarize_document(file: UploadFile = File(...)):
-    try:
-        # Read uploaded file
-        content = await file.read()
-
-        # Only handle plain text for now
-        try:
-            text = content.decode("utf-8")
-        except UnicodeDecodeError:
-            raise HTTPException(status_code=400, detail="Only plain text (.txt) files supported for now.")
-
-        # Call OpenAI to summarize
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that summarizes documents."},
-                {"role": "user", "content": f"Summarize the following document:\n\n{text}"}
-            ],
-            max_tokens=250
-        )
-
-        summary = response.choices[0].message.content
-        return {"summary": summary}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# Serve frontend AFTER defining all API routes
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
