@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 import shutil, os, uuid
 from datetime import datetime
 
-from app.database import get_db
+from app.database import get_db ,SessionLocal
 from app.models.document import Document
 from app.routes.auth import get_current_user
 from app.models.user import User
@@ -117,3 +117,27 @@ def get_document(doc_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="File missing on server")
 
     return FileResponse(path=doc.file_path, filename=doc.filename)
+
+
+@router.delete("/delete/{doc_id}")
+def delete_document(doc_id: int, current_user: User = Depends(get_current_user)):
+    db: Session = SessionLocal()
+    try:
+        doc = db.query(Document).filter(Document.id == doc_id).first()
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Only uploader can delete
+        if doc.uploaded_by != current_user.username:
+            raise HTTPException(status_code=403, detail="You are not allowed to delete this document")
+        
+        # Delete file from filesystem
+        if doc.file_path and os.path.exists(doc.file_path):
+            os.remove(doc.file_path)
+        
+        # Delete record from DB
+        db.delete(doc)
+        db.commit()
+        return {"detail": "Document deleted successfully"}
+    finally:
+        db.close()
