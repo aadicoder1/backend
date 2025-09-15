@@ -24,12 +24,7 @@ SENIOR_ROLES = {
     "Admin"
 }
 
-@router.get("/dashboard")
-def dashboard(current_user: User = Depends(get_current_user)):
-    if current_user.role in SENIOR_ROLES:
-        return FileResponse(os.path.join("frontend", "dashboard.html"))
-    else:
-        return FileResponse(os.path.join("frontend", "employee_dashboard.html"))
+
 
 @router.post("/upload")
 async def upload_document(

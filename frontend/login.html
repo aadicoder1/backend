@@ -100,6 +100,15 @@
   </div>
 
   <script>
+    const SENIOR_ROLES = [
+      "Assistant Manager",
+      "Manager",
+      "Deputy General Manager",
+      "General Manager",
+      "Addl. General Manager (Operations & Maintenance)",
+      "Admin"
+    ];
+
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -116,12 +125,17 @@
         if (response.ok) {
           const data = await response.json();
 
-          // ✅ Save token & username for dashboard
+          // ✅ Save token & username
           localStorage.setItem("token", data.access_token);
           localStorage.setItem("username", data.username);
+          localStorage.setItem("role", data.role); // store role
 
-          // 🚀 Directly redirect without showing alert
-          window.location.href = "dashboard.html";
+          // 🚀 Redirect based on role
+          if (SENIOR_ROLES.includes(data.role)) {
+            window.location.href = "dashboard.html"; // senior dashboard
+          } else {
+            window.location.href = "employee_dashboard.html"; // normal employee dashboard
+          }
 
         } else {
           const err = await response.json();

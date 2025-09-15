@@ -1,71 +1,293 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Employee Dashboard - KMRL SmartDocs</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; }
-    .header { background: #005baa; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .header h1 { margin: 0; font-size: 22px; }
-    .logout-btn { background: white; color: #005baa; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
-    .container { max-width: 900px; margin: 20px auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h2 { color: #005baa; }
-    .document-list { list-style: none; padding: 0; }
-    .document-list li { padding: 10px; margin: 8px 0; background: #f2f2f2; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
-    .doc-link { color: #005baa; text-decoration: none; font-weight: bold; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>KMRL SmartDocs - Employee Dashboard</title>
+<style>
+  :root{
+    --primary:#005baa;
+    --muted:#6b7280;
+    --card:#ffffff;
+    --bg:#f5f7fa;
+  }
+  *{box-sizing:border-box}
+  body{ margin:0; font-family:Inter, Arial, sans-serif; background:var(--bg); color:#111; }
+
+  /* Topbar */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 20px; background:var(--primary); color:white;
+  }
+  .topbar .greet{ font-size:16px; font-weight:500; }
+  .topbar button{ background:white; color:var(--primary); border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+
+  /* Layout */
+  .layout{ display:flex; gap:18px; padding:18px; height:calc(100vh - 58px); }
+
+  /* Left sidebar */
+  .left { width: 280px; display:flex; flex-direction:column; gap:12px; }
+  .card{ background:var(--card); border-radius:10px; padding:14px; box-shadow:0 6px 18px rgba(10,20,40,0.06); }
+  .left .card{ flex-shrink:0; }
+
+  .card h3{ margin:0 0 8px 0; color:var(--primary); font-size:15px; }
+  .small{ font-size:13px; color:var(--muted) }
+
+  .notifications { display:flex; flex-direction:column; gap:8px; max-height:150px; overflow-y:auto; }
+  .note { background:#eef6ff; border-left:4px solid var(--primary); padding:8px; border-radius:6px; font-size:14px; }
+
+  .chat-placeholder { background:#f3f4f6; padding:12px; border-radius:8px; min-height:120px; display:flex; align-items:center; justify-content:center; color:var(--muted) }
+
+  /* Center */
+  .center { flex:1; overflow:auto; display:flex; flex-direction:column; gap:12px; }
+  .center .card{ padding:12px 14px; }
+  table{ width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow:0 3px 10px rgba(0,0,0,0.06); }
+  th,td{ padding:12px 10px; text-align:left; border-bottom:1px solid #eee; font-size:14px; }
+  th{ background:#f3f4f6; color:#222; font-weight:600; }
+  .no-data { padding:18px; text-align:center; color:var(--muted) }
+
+  /* Right */
+  .right { width:340px; display:flex; flex-direction:column; gap:12px; }
+  .input, select, textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #e6e6e6; font-size:14px; margin-bottom:10px; }
+
+  @media (max-width:1000px){
+    .layout{ flex-direction:column; height:auto; padding:12px; }
+    .left, .right { width:100%; }
+  }
+</style>
 </head>
 <body>
-  <div class="header">
-    <h1>Employee Dashboard</h1>
-    <button class="logout-btn" onclick="logout()">Logout</button>
+  <div class="topbar">
+    <div class="greet" id="greet">👋 Welcome, User</div>
+    <div><button id="logoutBtn">Logout</button></div>
   </div>
 
-  <div class="container">
-    <h2>📂 Available Documents</h2>
-    <ul class="document-list" id="docList"></ul>
+  <div class="layout">
+    <!-- Left: Employee / Notifications / Chatbot -->
+    <aside class="left">
+      <div class="card" id="employeeCard">
+        <h3>Employee Details</h3>
+        <div><strong id="empName">--</strong></div>
+        <div class="small">ID: <span id="empId">--</span></div>
+        <div class="small">Dept: <span id="empDept">--</span></div>
+        <div class="small">Role: <span id="empRole">--</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Notifications</h3>
+        <div class="notifications" id="notifications">
+          <div class="note">No new notifications</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>AI Chatbot</h3>
+        <div class="chat-placeholder">Chatbot panel (space reserved)</div>
+      </div>
+    </aside>
+
+    <!-- Center: Documents list -->
+    <main class="center">
+      <div class="card">
+        <h3>Available Documents</h3>
+        <input type="text" id="searchInput" class="input" placeholder="🔍 Quick Search by Title or Department" />
+        <div style="overflow:auto; margin-top:10px;">
+          <table id="docsTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Uploaded By</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="docsTbody">
+              <tr><td class="no-data" colspan="5">Loading documents…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right: Quick Search info (optional tips or filters) -->
+    <aside class="right">
+  <!-- Quick Search Tips -->
+  <div class="card">
+    <h3>Quick Search Tips</h3>
+    <p class="small">You can search by document title or department above.</p>
   </div>
 
-  <script>
-    async function fetchDocuments() {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Login first!");
-        window.location.href = "login.html";
-        return;
-      }
+  <!-- To-Do Card -->
+  <div class="card">
+    <h3>📝 My To-Do</h3>
+    <input type="text" id="todoInput" class="input" placeholder="Add a new task" />
+    <button id="addTodoBtn" style="background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;">Add Task</button>
+    <ul id="todoList" style="list-style:none; padding-left:0; margin-top:10px;"></ul>
+  </div>
+</aside>
 
-      try {
-        const res = await fetch("http://127.0.0.1:8000/documents", {
-          headers: { "Authorization": "Bearer " + token }
-        });
+  </div>
 
-        if (!res.ok) throw new Error("Failed to fetch documents");
+<script>
+const API_BASE = "http://127.0.0.1:8000";
+const token = localStorage.getItem("token");
+const username = localStorage.getItem("username") || "User";
 
-        const docs = await res.json();
-        const list = document.getElementById("docList");
-        list.innerHTML = "";
+/* DOM refs */
+const greet = document.getElementById("greet");
+const logoutBtn = document.getElementById("logoutBtn");
+const empName = document.getElementById("empName");
+const empId = document.getElementById("empId");
+const empDept = document.getElementById("empDept");
+const empRole = document.getElementById("empRole");
+const notifications = document.getElementById("notifications");
 
-        docs.forEach(doc => {
-          const li = document.createElement("li");
-          li.innerHTML = `<a class="doc-link" href="http://127.0.0.1:8000/documents/${doc.id}" target="_blank">${doc.title}</a> 
-                          <span>(${doc.department})</span>`;
-          list.appendChild(li);
-        });
-      } catch (err) {
-        alert("Error loading documents: " + err.message);
-      }
+const docsTbody = document.getElementById("docsTbody");
+const searchInput = document.getElementById("searchInput");
+
+if (!token) {
+  window.location.href = "login.html";
+} else {
+  greet.innerText = `👋 Welcome, ${username}`;
+}
+
+/* Logout */
+logoutBtn.addEventListener("click", ()=>{
+  localStorage.removeItem("token");
+  localStorage.removeItem("username");
+  window.location.href = "login.html";
+});
+
+/* Fetch employee details */
+async function loadEmployeeDetails(){
+  try {
+    const res = await fetch(`${API_BASE}/auth/me`, { headers: { "Authorization": "Bearer " + token } });
+    if(res.ok){
+      const u = await res.json();
+      empName.innerText = u.full_name || u.username || username;
+      empId.innerText = u.id || u.employee_id || "--";
+      empDept.innerText = u.department || "--";
+      empRole.innerText = u.role || "--";
     }
+  } catch(err){ console.warn("Employee details error:", err); }
+}
 
-    function logout() {
-      localStorage.removeItem("token");
-      localStorage.removeItem("username");
-      localStorage.removeItem("role");
-      window.location.href = "login.html";
+/* Fetch notifications */
+async function loadNotifications(){
+  try {
+    const res = await fetch(`${API_BASE}/notifications`, { headers: { "Authorization": "Bearer " + token } });
+    if(res.ok){
+      const list = await res.json();
+      notifications.innerHTML = "";
+      if(Array.isArray(list) && list.length){
+        list.slice(0,6).forEach(n=>notifications.innerHTML += `<div class="note">${n.message || n}</div>`);
+      } else notifications.innerHTML = `<div class="note">No new notifications</div>`;
     }
+  } catch{ notifications.innerHTML = `<div class="note">No new notifications</div>`; }
+}
 
-    fetchDocuments();
-  </script>
+/* Fetch documents */
+let allDocs = [];
+async function fetchDocuments(){
+  docsTbody.innerHTML = `<tr><td class="no-data" colspan="5">Loading…</td></tr>`;
+  try {
+    const res = await fetch(`${API_BASE}/documents/list`, { headers: { "Authorization": "Bearer " + token } });
+    if(!res.ok){ docsTbody.innerHTML = `<tr><td class="no-data" colspan="5">Failed to load documents</td></tr>`; return; }
+    allDocs = await res.json();
+    renderDocs(allDocs);
+  } catch(err){ docsTbody.innerHTML = `<tr><td class="no-data" colspan="5">Network error</td></tr>`; }
+}
+
+/* Render filtered documents */
+function renderDocs(docs){
+  docsTbody.innerHTML = "";
+  if(!docs.length){
+    docsTbody.innerHTML = `<tr><td class="no-data" colspan="5">No documents uploaded yet.</td></tr>`;
+    return;
+  }
+  docs.forEach(d=>{
+    let date = d.uploaded_at?.split("T")[0] || "--";
+    docsTbody.innerHTML += `
+      <tr>
+        <td>${escapeHtml(d.title || d.filename || "Unnamed")}</td>
+        <td>${escapeHtml(d.department || "—")}</td>
+        <td>${escapeHtml(d.uploaded_by || "—")}</td>
+        <td>${escapeHtml(date)}</td>
+        <td><a href="${API_BASE}/documents/${d.id}" target="_blank">Open</a></td>
+      </tr>
+    `;
+  });
+}
+
+/* Quick search */
+searchInput.addEventListener("input", ()=>{
+  const val = searchInput.value.toLowerCase();
+  const filtered = allDocs.filter(d=> 
+    (d.title||"").toLowerCase().includes(val) || 
+    (d.department||"").toLowerCase().includes(val)
+  );
+  renderDocs(filtered);
+});
+
+/* escape html */
+function escapeHtml(str){ return String(str||"").replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* init */
+loadEmployeeDetails();
+loadNotifications();
+fetchDocuments();
+
+
+// ----- To-Do Functionality -----
+const todoInput = document.getElementById("todoInput");
+const addTodoBtn = document.getElementById("addTodoBtn");
+const todoList = document.getElementById("todoList");
+
+// Load todos from localStorage
+let todos = JSON.parse(localStorage.getItem("todos") || "[]");
+function renderTodos() {
+  todoList.innerHTML = "";
+  if (!todos.length) {
+    todoList.innerHTML = "<li style='color:var(--muted)'>No tasks added</li>";
+    return;
+  }
+  todos.forEach((task, index) => {
+    const li = document.createElement("li");
+    li.style.display = "flex";
+    li.style.justifyContent = "space-between";
+    li.style.alignItems = "center";
+    li.style.padding = "6px 0";
+
+    li.innerHTML = `
+      <span>${escapeHtml(task)}</span>
+      <button style="background:red;color:white;border:none;padding:2px 6px;border-radius:4px;cursor:pointer;">❌</button>
+    `;
+    // Delete task
+    li.querySelector("button").addEventListener("click", () => {
+      todos.splice(index, 1);
+      localStorage.setItem("todos", JSON.stringify(todos));
+      renderTodos();
+    });
+    todoList.appendChild(li);
+  });
+}
+
+// Add new todo
+addTodoBtn.addEventListener("click", () => {
+  const task = todoInput.value.trim();
+  if (task) {
+    todos.push(task);
+    localStorage.setItem("todos", JSON.stringify(todos));
+    todoInput.value = "";
+    renderTodos();
+  }
+});
+
+// Initialize
+renderTodos();
+
+
+</script>
 </body>
 </html>

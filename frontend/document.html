@@ -20,8 +20,8 @@
       font-family:Arial, sans-serif;
       background:#f5f7fa;
       min-height:100vh;
-      display:grid;             /* grid avoids flex side-by-side issue */
-      place-items:center;       /* centers the card */
+      display:grid;
+      place-items:center;
     }
     .container{
       background:#fff;
@@ -53,16 +53,16 @@
       border-radius:999px; background:#e8f1ff; color:var(--blue);
       font-size:12px; border:1px solid #cfe0ff;
     }
-    /* Modal overlay (hidden by default) */
+    /* Modal */
     .modal{
       position:fixed; inset:0;
       background:rgba(0,0,0,.5);
-      display:none;                       /* hidden */
+      display:none;
       align-items:center; justify-content:center;
       z-index:9999;
       padding:16px;
     }
-    .modal.show{ display:flex }           /* show when toggled */
+    .modal.show{ display:flex }
     .modal-card{
       width:min(520px, 96vw);
       background:#fff; border-radius:12px;
@@ -72,9 +72,8 @@
     .modal-card h3{ margin:0 0 10px; color:var(--blue) }
     .roles{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px 14px; margin:8px 0 4px }
     .row{ margin:12px 0 6px; font-weight:bold }
-    .footer{
-      display:flex; justify-content:flex-end; gap:10px; margin-top:14px
-    }
+    .footer{ display:flex; justify-content:flex-end; gap:10px; margin-top:14px }
+    .summary-text{ white-space:pre-wrap; text-align:left; background:#f8f9fc; padding:10px; border-radius:6px; max-height:300px; overflow-y:auto }
   </style>
 </head>
 <body>
@@ -114,6 +113,17 @@
     </div>
   </div>
 
+  <!-- Summary Modal -->
+  <div id="summaryModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <h3>📄 Document Summary</h3>
+      <div id="summaryContent" class="summary-text">Loading...</div>
+      <div class="footer">
+        <button class="btn close" onclick="closeSummary()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
   // ---- Setup ----
   const params = new URLSearchParams(window.location.search);
@@ -124,9 +134,8 @@
   const currentAccess = document.getElementById("currentAccess");
   const rolesBox = document.getElementById("rolesBox");
 
-  let currentDoc = null; // store metadata for AI suggestion
+  let currentDoc = null;
 
-  // ---- Fetch document metadata ----
   async function loadDocument() {
     if (docId === "Unknown") {
       titleEl.textContent = "❌ Invalid Document";
@@ -145,10 +154,7 @@
         return;
       }
 
-      // Show title + description
       titleEl.textContent = currentDoc.title || ("Document ID: " + docId);
-
-      // Link Open button to backend route
       openBtn.href = `http://127.0.0.1:8000/documents/${docId}`;
 
       renderCurrentAccess();
@@ -157,16 +163,26 @@
       titleEl.textContent = "⚠️ Error loading document";
     }
   }
-
   loadDocument();
 
-  // ---- Summary (demo) ----
-  function summarizeDoc() {
-    if (currentDoc) {
-      alert("📄 Summary of document: " + currentDoc.title);
-    } else {
-      alert("⚠️ Summary unavailable");
+  // ---- Summary ----
+  async function summarizeDoc() {
+    if (!currentDoc) return alert("⚠️ Summary unavailable");
+
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/summarize/${docId}`);
+      if (!res.ok) throw new Error("Failed to summarize");
+
+      const data = await res.json();
+      document.getElementById("summaryContent").textContent = data.summary;
+      document.getElementById("summaryModal").classList.add("show");
+    } catch (err) {
+      alert("Error: " + err.message);
     }
+  }
+
+  function closeSummary(){
+    document.getElementById("summaryModal").classList.remove("show");
   }
 
   // ---- Access modal controls ----
@@ -193,25 +209,20 @@
     if(e.target === modal) closeAccessModal();
   });
 
-  // ---- AI suggestion ----
   aiBtn.addEventListener("click", ()=>{
     const name = (currentDoc?.title || "").toLowerCase();
     const suggestion = new Set();
-
     if (name.includes("safety")) suggestion.add("Staff"), suggestion.add("Manager");
     if (name.includes("employee") || name.includes("guidelines")) suggestion.add("HR Executive"), suggestion.add("Manager");
     if (name.includes("budget")) suggestion.add("Finance"), suggestion.add("Admin");
     if (name.includes("annual") || name.includes("report")) suggestion.add("Admin"), suggestion.add("Manager");
     if (name.includes("expansion") || name.includes("plan")) suggestion.add("Engineer"), suggestion.add("Manager");
-
     if (suggestion.size === 0) suggestion.add("Admin");
-
     Array.from(rolesBox.querySelectorAll('input[type="checkbox"]')).forEach(cb=>{
       cb.checked = suggestion.has(cb.value);
     });
   });
 
-  // ---- Save roles to localStorage ----
   function saveAccess() {
     const selected = Array.from(rolesBox.querySelectorAll('input[type="checkbox"]:checked'))
                     .map(cb => cb.value);
@@ -240,10 +251,8 @@
     </div>`;
   }
 
-  // ---- Close button ----
   function closeDoc(){ window.location.href = "dashboard.html"; }
   window.closeDoc = closeDoc;
-</script>
-
+  </script>
 </body>
 </html>
