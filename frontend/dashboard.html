@@ -1,202 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>KMRL SmartDocs - Dashboard</title>
+<style>
+  :root{
+    --primary:#005baa;
+    --muted:#6b7280;
+    --card:#ffffff;
+    --bg:#f5f7fa;
+  }
+  *{box-sizing:border-box}
+  body{ margin:0; font-family:Inter, Arial, sans-serif; background:var(--bg); color:#111; }
+
+  /* Topbar */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 20px; background:var(--primary); color:white;
+  }
+  .topbar .greet{ font-size:16px; font-weight:500; }
+  .topbar button{ background:white; color:var(--primary); border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+
+  /* Container grid: left | center | right */
+  .container{
+    display: grid;
+    grid-template-columns: 300px 1fr 340px; /* left column + main area + right column */
+    gap: 18px;
+    padding:18px;
+    min-height: calc(100vh - 58px);
+    align-items:start;
+  }
+
+  /* Left sidebar */
+  .left { display:flex; flex-direction:column; gap:12px; }
+  .card{ background:var(--card); border-radius:10px; padding:14px; box-shadow:0 6px 18px rgba(10,20,40,0.06); }
+  .left .card{ flex-shrink:0; }
+
+  .card h3{ margin:0 0 8px 0; color:var(--primary); font-size:15px; }
+  .small{ font-size:13px; color:var(--muted) }
+
+  /* Center */
+  .center { overflow:auto; display:flex; flex-direction:column; gap:12px; }
+  .center .card{ padding:12px 14px; }
+
+  table{ width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow:0 3px 10px rgba(0,0,0,0.06); }
+  th,td{ padding:12px 10px; text-align:left; border-bottom:1px solid #eee; font-size:14px; }
+  th{ background:#f3f4f6; color:#222; font-weight:600; }
+  .no-data { padding:18px; text-align:center; color:var(--muted) }
+
+  /* Right sidebar */
+  .right { display:flex; flex-direction:column; gap:12px; }
+  .input, select, textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #e6e6e6; font-size:14px; margin-bottom:10px; }
+  .btn{ background:var(--primary); color:white; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:500; width:100%; }
+
+  /* Notifications & Chat placeholder (theme-consistent) */
+  .notifications {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:160px;
+    overflow-y:auto;
+    padding-top:4px;
+  }
+  .note {
+    background:#eef6ff;
+    border-left:4px solid var(--primary);
+    padding:8px;
+    border-radius:6px;
+    font-size:14px;
+    color: #0b3b66;
+  }
+  .chat-placeholder {
+    background:#f3f4f6;
+    padding:14px;
+    border-radius:8px;
+    min-height:120px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  @media (max-width:1000px){
+    .container{
+      grid-template-columns: 1fr; /* stack vertically on small screens */
+      padding:12px;
+    }
+    .left, .right { width:100%; }
+  }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="greet" id="greet">📂 SmartDocs Dashboard</div>
+    <div><button id="logoutBtn">Logout</button></div>
+  </div>
+
+  <div class="container">
+    <!-- LEFT: Employee card, Notifications, Chatbot -->
+    <aside class="left">
+      <div class="card" id="employeeCard">
+        <h3>Employee Details</h3>
+        <div><strong id="empName">--</strong></div>
+        <div class="small">ID: <span id="empId">--</span></div>
+        <div class="small">Dept: <span id="empDept">--</span></div>
+        <div class="small">Role: <span id="empRole">--</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Notifications</h3>
+        <div class="notifications" id="notifications">
+          <div class="note">Loading notifications…</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>AI Chatbot</h3>
+        <div class="chat-placeholder" id="chatPlaceholder">Chatbot panel (reserved)</div>
+      </div>
+    </aside>
+
+    <!-- CENTER: Document list -->
+    <main class="center">
+      <div class="card">
+        <h3>Available Documents</h3>
+        <input type="text" id="searchInput" class="input" placeholder="🔍 Quick Search by Title or Department" />
+        <div style="overflow:auto; margin-top:10px;">
+          <table id="docsTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Access</th>
+                <th>Uploaded By</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="docsTbody">
+              <tr><td class="no-data" colspan="6">Loading documents…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT: Upload panel -->
+    <aside class="right">
+      <div class="card">
+        <h3>📤 Upload Document</h3>
+        <form id="uploadForm">
+          <input type="text" class="input" name="title" placeholder="Document title (optional)" />
+          <textarea class="input" name="description" rows="2" placeholder="Description (optional)"></textarea>
+          <select class="input" name="department">
+            <option>Administration</option>
+            <option>Engineering</option>
+            <option>Finance</option>
+            <option>HR</option>
+          </select>
+          <select class="input" name="accessRole">
+            <option>All Employees</option>
+            <option>Managers</option>
+            <option>HR Executive</option>
+          </select>
+          <input type="file" class="input" name="file" />
+          <button type="submit" class="btn">Upload </button>
+        </form>
+        <div id="uploadStatus" class="small" style="margin-top:8px; color:green;"></div>
+      </div>
+    </aside>
+  </div>
+
 <script>
 const API_BASE = "http://127.0.0.1:8000";
 const token = localStorage.getItem("token");
 const username = localStorage.getItem("username") || "User";
 
-// Departments
-const DEPARTMENTS = [
-  "Administration","Operations","Engineering","Maintenance","Systems (Signalling & Telecom)",
-  "Electrical","Civil","Rolling Stock","Finance","Human Resources","IT","Security","Commercial",
-  "Projects","Procurement","Stores","Safety & Quality","Public Relations","Legal","Customer Service"
-];
+let currentUser = username; // default
 
-// Roles
-const ROLES = [
-  "All Employees","Admin","Manager","Team Lead","Supervisor","Executive","Engineer",
-  "Technician","HR Executive","Finance Officer","IT Support","Security Officer",
-  "Contractor","Viewer","Uploader"
-];
-
-/* DOM refs */
+/* DOM */
 const greet = document.getElementById("greet");
 const logoutBtn = document.getElementById("logoutBtn");
 const empName = document.getElementById("empName");
 const empId = document.getElementById("empId");
+const empDept = document.getElementById("empDept");
 const empRole = document.getElementById("empRole");
-const notifications = document.getElementById("notifications");
-
-const docsTbody = document.getElementById("docsTbody");
-const msgBox = document.getElementById("msgBox");
-
-const accessRoleSelect = document.getElementById("accessRole");
-const uploadBtn = document.getElementById("uploadBtn");
-const uploadMsg = document.getElementById("uploadMsg");
-const fileInput = document.getElementById("fileInput");
-const titleInput = document.getElementById("title");
-const descInput = document.getElementById("description");
 
 if (!token) {
   window.location.href = "login.html";
 } else {
-  greet.innerText = `👋 Welcome, ${username}`;
+  greet.innerText = `📂 Dashboard - ${username}`;
 }
 
-/* fill selects */
-ROLES.forEach(r=>accessRoleSelect.innerHTML += `<option>${r}</option>`);
-
 logoutBtn.addEventListener("click", ()=>{
-  localStorage.removeItem("token"); localStorage.removeItem("username");
+  localStorage.removeItem("token");
+  localStorage.removeItem("username");
   window.location.href = "login.html";
 });
 
-/* fetch employee details */
+/* Fetch employee details */
 async function loadEmployeeDetails(){
   try {
-    let res = await fetch(`${API_BASE}/auth/me`, { headers: { "Authorization": "Bearer " + token } });
-    if(!res.ok){ res = await fetch(`${API_BASE}/users/me`, { headers: { "Authorization": "Bearer " + token } }); }
+    const res = await fetch(`${API_BASE}/auth/me`, { headers: { "Authorization": "Bearer " + token } });
     if(res.ok){
       const u = await res.json();
       empName.innerText = u.full_name || u.username || username;
       empId.innerText = u.id || u.employee_id || "--";
+      empDept.innerText = u.department || "--";
       empRole.innerText = u.role || "--";
+      currentUser = u.username || username; // ✅ store actual username
     }
-  } catch(err){ console.warn("Employee details error:", err); empName.innerText = username; }
+  } catch(err){ console.warn("Employee details error:", err); }
 }
 
-/* fetch notifications */
+/* Notifications */
 async function loadNotifications(){
+  const notificationsEl = document.getElementById("notifications");
+  if(!notificationsEl) return;
   try {
-    const res = await fetch(`${API_BASE}/notifications`, { headers: { "Authorization": "Bearer " + token } });
-    if(res.ok){
-      const list = await res.json();
-      notifications.innerHTML = "";
-      if(Array.isArray(list) && list.length){
-        list.slice(0,6).forEach(n=>notifications.innerHTML += `<div class="note">${n.message || n}</div>`);
-      } else notifications.innerHTML = `<div class="note">No new notifications</div>`;
-    }
-  } catch{ notifications.innerHTML = `<div class="note">No new notifications</div>`; }
-}
-
-/* fetch documents */
-async function fetchDocuments(){
-  docsTbody.innerHTML = `<tr><td class="no-data" colspan="5">Loading…</td></tr>`;
-  try {
-    const res = await fetch(`${API_BASE}/documents/list`, { headers: { "Authorization": "Bearer " + token } });
-    if(!res.ok){ docsTbody.innerHTML = `<tr><td class="no-data" colspan="5">Failed to load documents</td></tr>`; return; }
-    const docs = await res.json();
-    if(!docs.length){ docsTbody.innerHTML = `<tr><td class="no-data" colspan="5">No documents uploaded yet.</td></tr>`; return; }
-    docsTbody.innerHTML = "";
-
-    docs.forEach(d=>{
-      const access = d.access_role || "—";
-      const uploaded_by = d.uploaded_by || "—";
-      let date = d.uploaded_at || "—";
-      if(typeof date==="string" && date.includes("T")) date = date.split("T")[0];
-
-      // Show delete button only if current user is uploader
-      const deleteBtn = uploaded_by === username
-        ? `<button class="deleteBtn" data-id="${d.id}" style="color:red; border:none; background:none; cursor:pointer">Delete</button>`
-        : "";
-
-      docsTbody.innerHTML += `
-        <tr>
-          <td>${escapeHtml(d.filename || d.title || "Unnamed")}</td>
-          <td>${escapeHtml(access)}</td>
-          <td>${escapeHtml(uploaded_by)}</td>
-          <td>${escapeHtml(date)}</td>
-          <td>
-            <a href="document.html?id=${d.id}" target="_blank">Open</a>
-            ${deleteBtn}
-          </td>
-        </tr>`;
+    const res = await fetch(`${API_BASE}/notifications`, {
+      headers: { "Authorization": `Bearer ${token}` }
     });
-
-    // Attach delete handlers
-    document.querySelectorAll(".deleteBtn").forEach(btn=>{
-      btn.addEventListener("click", async ()=>{
-        const docId = btn.dataset.id;
-        if(!confirm("Are you sure you want to delete this document?")) return;
-
-        try {
-          const res = await fetch(`${API_BASE}/documents/delete/${docId}`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${token}` }
-          });
-          if(res.ok){
-            alert("Document deleted successfully");
-            fetchDocuments(); // refresh list
-          } else {
-            const err = await res.json().catch(()=>({detail:"Failed"}));
-            alert("Error: " + (err.detail || res.statusText));
-          }
-        } catch(e){
-          alert("Network error during deletion");
-          console.error(e);
-        }
-      });
-    });
-
-  } catch(err){ docsTbody.innerHTML = `<tr><td class="no-data" colspan="5">Network error</td></tr>`; }
-}
-
-/* upload handler */
-uploadBtn.addEventListener("click", async ()=>{
-  const file = fileInput.files[0];
-  if(!file){
-    uploadMsg.innerText = "Please choose a file";
-    uploadMsg.style.color="red";
-    return;
-  }
-
-  const fd = new FormData();
-  fd.append("file", file);
-  fd.append("title", titleInput.value || file.name);
-  fd.append("description", descInput.value || "");
-  fd.append("access_role", accessRoleSelect.value);
-
-  uploadBtn.disabled = true;
-  uploadBtn.innerText = "Uploading…";
-  uploadMsg.innerText = "";
-
-  try {
-    const res = await fetch(`${API_BASE}/documents/upload`, {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${token}` },
-      body: fd
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.error("Upload error:", res.status, err);
-      uploadMsg.innerText = "Upload failed: " + (err.detail || res.statusText);
-      uploadMsg.style.color = "red";
+    if(!res.ok){
+      notificationsEl.innerHTML = `<div class="note">Failed to load notifications</div>`;
       return;
     }
-
-    const data = await res.json();
-    uploadMsg.innerText = "✅ Uploaded: " + (data.filename || file.name);
-    uploadMsg.style.color = "green";
-
-    fileInput.value = "";
-    titleInput.value = "";
-    descInput.value = "";
-
-    fetchDocuments(); // reload docs list
-  } catch (err) {
-    console.error("Network error:", err);
-    uploadMsg.innerText = "Network error during upload";
-    uploadMsg.style.color = "red";
-  } finally {
-    uploadBtn.disabled = false;
-    uploadBtn.innerText = "Upload";
+    const list = await res.json();
+    notificationsEl.innerHTML = "";
+    if(!Array.isArray(list) || list.length === 0){
+      notificationsEl.innerHTML = `<div class="note">No new notifications</div>`;
+      return;
+    }
+    list.slice(0,6).forEach(n => {
+      const msg = (typeof n === "string") ? n : (n.message || n.detail || JSON.stringify(n));
+      const div = document.createElement("div");
+      div.className = "note";
+      div.textContent = msg;
+      notificationsEl.appendChild(div);
+    });
+  } catch(err){
+    console.warn("Notifications error:", err);
+    notificationsEl.innerHTML = `<div class="note">No new notifications</div>`;
   }
+}
+
+/* Documents */
+let allDocs = [];
+async function fetchDocuments(){
+  const docsTbody = document.getElementById("docsTbody");
+  docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">Loading…</td></tr>`;
+  try {
+    const res = await fetch(`${API_BASE}/documents/list`, { headers: { "Authorization": "Bearer " + token } });
+    if(!res.ok){ docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">Failed to load documents</td></tr>`; return; }
+    allDocs = await res.json();
+    renderDocs(allDocs);
+  } catch(err){ docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">Network error</td></tr>`; }
+}
+
+function renderDocs(docs){
+  const docsTbody = document.getElementById("docsTbody");
+  docsTbody.innerHTML = "";
+  if(!docs.length){
+    docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">No documents uploaded yet.</td></tr>`;
+    return;
+  }
+  docs.forEach(d=>{
+    let date = d.uploaded_at?.split("T")[0] || "--";
+
+    let actionBtns = `<a href="document.html?id=${d.id}" target="_blank">Open</a>`;
+    if ((d.uploaded_by || "").toLowerCase() === (currentUser || "").toLowerCase()) {
+      actionBtns += `<br><a href="#" onclick="deleteDoc(${d.id}); return false;" style="color:red;">Delete</a>`;
+    }
+
+    docsTbody.innerHTML += `
+      <tr>
+        <td>${escapeHtml(d.title || d.filename || "Unnamed")}</td>
+        <td>${escapeHtml(d.department || "—")}</td>
+        <td>${escapeHtml(d.access || "—")}</td>
+        <td>${escapeHtml(d.uploaded_by || "—")}</td>
+        <td>${escapeHtml(date)}</td>
+        <td>${actionBtns}</td>
+      </tr>
+    `;
+  });
+}
+
+async function deleteDoc(docId) {
+  let res;
+  try {
+    res = await fetch(`${API_BASE}/documents/delete/${docId}`, {
+      method: "DELETE",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json"
+      }
+    });
+  } catch (err) {
+    console.warn("DELETE failed, retrying with POST:", err);
+  }
+
+  // Retry with POST if DELETE is blocked or failed
+  if (!res || !res.ok) {
+    res = await fetch(`${API_BASE}/documents/delete/${docId}`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json"
+      }
+    });
+  }
+
+  if (res.ok) {
+    alert("✅ Document deleted successfully");
+    location.reload();
+  } else {
+    let errMsg = "Unexpected error";
+    try {
+      const err = await res.json();
+      errMsg = err.detail || JSON.stringify(err);
+    } catch (_) {}
+    alert("❌ Failed to delete: " + errMsg);
+  }
+}
+
+
+
+/* Search */
+document.getElementById("searchInput").addEventListener("input", (e)=>{
+  const val = e.target.value.toLowerCase();
+  const filtered = allDocs.filter(d=> 
+    (d.title||"").toLowerCase().includes(val) || 
+    (d.department||"").toLowerCase().includes(val)
+  );
+  renderDocs(filtered);
 });
 
-/* utils */
 function escapeHtml(str){ return String(str||"").replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-/* init */
+/* Init */
 loadEmployeeDetails();
 loadNotifications();
 fetchDocuments();
 </script>
+</body>
+</html>

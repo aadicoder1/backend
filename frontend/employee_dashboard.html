@@ -213,7 +213,7 @@ function renderDocs(docs){
         <td>${escapeHtml(d.department || "—")}</td>
         <td>${escapeHtml(d.uploaded_by || "—")}</td>
         <td>${escapeHtml(date)}</td>
-        <td><a href="${API_BASE}/documents/${d.id}" target="_blank">Open</a></td>
+        <td><a href="document.html?id=${d.id}" target="_blank">Open</a></td>
       </tr>
     `;
   });

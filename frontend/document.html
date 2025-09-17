@@ -82,7 +82,7 @@
 
     <a id="openBtn" class="btn open" target="_blank" rel="noopener">📂 Open Document</a>
     <button class="btn summarize" onclick="summarizeDoc()">📄 Summarize</button>
-    <button class="btn access" onclick="openAccessModal()">🔑 Give Access</button>
+    <button id="accessBtn" class="btn access" onclick="openAccessModal()">🔑 Give Access</button>
     <button class="btn close" onclick="closeDoc()">❌ Close</button>
 
     <div id="currentAccess" style="margin-top:8px;"></div>
@@ -158,6 +158,21 @@
       openBtn.href = `http://127.0.0.1:8000/documents/${docId}`;
 
       renderCurrentAccess();
+
+      // 🔒 Role-based restriction for "Give Access"
+      const role = localStorage.getItem("role") || "";
+      const seniorRoles = [
+        "Assistant Manager",
+        "Manager",
+        "Deputy General Manager",
+        "General Manager",
+        "Addl. General Manager (Operations & Maintenance)",
+        "Admin"
+      ];
+      const accessBtn = document.getElementById("accessBtn");
+      if (accessBtn && !seniorRoles.includes(role)) {
+        accessBtn.style.display = "none";
+      }
     } catch (err) {
       console.error("Failed to load document:", err);
       titleEl.textContent = "⚠️ Error loading document";
@@ -251,8 +266,26 @@
     </div>`;
   }
 
-  function closeDoc(){ window.location.href = "dashboard.html"; }
+  function closeDoc(){
+    const role = localStorage.getItem("role") || "";
+
+    const seniorRoles = [
+      "Assistant Manager",
+      "Manager",
+      "Deputy General Manager",
+      "General Manager",
+      "Addl. General Manager (Operations & Maintenance)",
+      "Admin"
+    ];
+
+    if (seniorRoles.includes(role)) {
+      window.location.href = "dashboard.html";
+    } else {
+      window.location.href = "employee_dashboard.html";
+    }
+  }
   window.closeDoc = closeDoc;
-  </script>
+</script>
+
 </body>
 </html>
