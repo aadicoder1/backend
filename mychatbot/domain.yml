@@ -1,0 +1,32 @@
+version: "3.1"
+
+intents:
+  - greet
+  - role_info
+  - task_help
+  - inconvenience_report
+  - goodbye
+  - bot_challenge
+
+responses:
+  utter_greet:
+    - text: "Hello! I am Ameya 👋. How can I help you today?"
+
+  utter_role_info:
+    - text: "You can check your assigned role in the employee portal. I can guide you step by step."
+
+  utter_task_help:
+    - text: "Sure! Tell me which task you are struggling with, and I’ll guide you."
+
+  utter_inconvenience_report:
+    - text: "Sorry to hear that 😟. Please describe your inconvenience, and I’ll report it to HR/support."
+
+  utter_goodbye:
+    - text: "Goodbye! Have a great day 😊"
+
+  utter_iamabot:
+    - text: "I am Ameya 🤖, your AI assistant. How can I help you today?"
+
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

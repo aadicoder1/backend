@@ -17,14 +17,12 @@ SECRET_KEY = "supersecret"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-
 # ------------------- TOKEN CREATION -------------------
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
 
 # ------------------- REGISTER -------------------
 @router.post("/register", response_model=UserOut)
@@ -47,7 +45,6 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
-
 # ------------------- LOGIN -------------------
 @router.post("/login")
 def login(payload: UserLogin, db: Session = Depends(get_db)):
@@ -66,7 +63,6 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
         "role": db_user.role,
     }
 
-
 # ------------------- GET CURRENT USER -------------------
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
@@ -82,12 +78,24 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     return user
 
-
-#---------------------------------------------------------
-
+# ------------------- /me Route -------------------
 @router.get("/me", response_model=UserOut)
-def read_current_user(current_user = Depends(get_current_user)):
+def read_current_user(current_user: User = Depends(get_current_user)):
     """
-    Return the currently authenticated user (used by frontend to get username & role).
+    Return the currently authenticated user.
+    Fully robust: ensures all fields exist for UserOut.
     """
-    return current_user
+    try:
+        # Build a safe dict with defaults
+        user_data = {
+            "id": getattr(current_user, "id", 0),
+            "username": getattr(current_user, "username", "Unknown"),
+            "full_name": getattr(current_user, "full_name", "Unknown"),
+            "email": getattr(current_user, "email", "unknown@example.com"),
+            "role": getattr(current_user, "role", "Employee"),
+        }
+        return user_data
+    except Exception as e:
+        print("ERROR in /me:", e)
+        raise HTTPException(status_code=500, detail="Server error fetching user")
+

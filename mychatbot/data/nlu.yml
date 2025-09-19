@@ -1,0 +1,56 @@
+version: "3.1"
+
+nlu:
+- intent: greet
+  examples: |
+    - hi
+    - hello
+    - hey
+    - good morning
+    - good evening
+    - namaskaram
+    - നമസ്കാരം
+    - ഹായ്
+    - ഹലോ
+
+- intent: role_info
+  examples: |
+    - What is my role?
+    - Tell me about my responsibilities
+    - What should I do in my position?
+    - എന്റെ ജോലി എന്താണ്?
+    - എനിക്ക് എന്താണ് ഉത്തരവാദിത്തം?
+
+- intent: task_help
+  examples: |
+    - I need help with my task
+    - Can you guide me with my work?
+    - Assist me in completing my duty
+    - എന്റെ ജോലി എങ്ങനെ ചെയ്യാം?
+    - എന്റെ ജോലി സഹായിക്കൂ
+
+- intent: inconvenience_report
+  examples: |
+    - I am facing an issue
+    - There is a problem in my work
+    - I want to report an inconvenience
+    - എനിക്ക് ഒരു പ്രശ്നമുണ്ട്
+    - ഒരു അസൗകര്യം റിപ്പോർട്ട് ചെയ്യണം
+
+- intent: goodbye
+  examples: |
+    - bye
+    - goodbye
+    - see you later
+    - take care
+    - good night
+    - പിന്നെ കാണാം
+    - വിട
+
+- intent: bot_challenge
+  examples: |
+    - are you a bot?
+    - are you human?
+    - who are you?
+    - am I talking to a human?
+    - നിങ്ങൾ റോബോട്ടാണോ?

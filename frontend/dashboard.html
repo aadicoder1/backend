@@ -90,6 +90,9 @@
     }
     .left, .right { width:100%; }
   }
+  /* small checkbox styling for neatness */
+  #accessRolesCheckboxes label { display:inline-block; margin-bottom:6px; font-size:14px; }
+  #accessRolesCheckboxes input { margin-right:8px; vertical-align:middle; }
 </style>
 </head>
 <body>
@@ -105,7 +108,6 @@
         <h3>Employee Details</h3>
         <div><strong id="empName">--</strong></div>
         <div class="small">ID: <span id="empId">--</span></div>
-        <div class="small">Dept: <span id="empDept">--</span></div>
         <div class="small">Role: <span id="empRole">--</span></div>
       </div>
 
@@ -116,10 +118,98 @@
         </div>
       </div>
 
-      <div class="card">
-        <h3>AI Chatbot</h3>
-        <div class="chat-placeholder" id="chatPlaceholder">Chatbot panel (reserved)</div>
-      </div>
+<div class="card">
+  <div id="chatbot">
+    <div id="chat-header">🤖 Ameya (AI Assistant)</div>
+    <div id="chat-body"></div>
+    <input id="chat-input" type="text" placeholder="Type in English / മലയാളം..." 
+           onkeypress="if(event.key === 'Enter'){sendMessage();}" />
+  </div>
+</div>
+
+<style>
+#chatbot {
+  display: flex;
+  flex-direction: column;
+  height: 300px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+#chat-header {
+  background: var(--primary);
+  color: white;
+  padding: 8px;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 8px 8px 0 0;
+  font-size: 14px;
+}
+#chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+#chat-input {
+  border: none;
+  border-top: 1px solid #ccc;
+  padding: 8px;
+  font-size: 13px;
+  outline: none;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const API_URL = "http://127.0.0.1:5005/webhooks/rest/webhook";
+  const chatMessages = document.getElementById("chat-body");
+  const userInput = document.getElementById("chat-input");
+  const senderId = "user_" + Date.now(); // unique per session
+
+  async function sendMessage() {
+    const message = userInput.value.trim();
+    if (!message) return;
+
+    appendMessage("You", message);
+    userInput.value = "";
+
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sender: senderId, message })
+      });
+
+      const data = await response.json();
+      if (data && data.length > 0) {
+        data.forEach((msg) => {
+          if (msg.text) appendMessage("Ameya", msg.text);
+        });
+      } else {
+        appendMessage("Ameya", "🤔 I didn’t understand that.");
+      }
+    } catch (error) {
+      appendMessage("Ameya", "⚠️ Error connecting to server.");
+      console.error("Error:", error);
+    }
+  }
+
+  function appendMessage(sender, text) {
+    const msgDiv = document.createElement("div");
+    msgDiv.innerHTML = `<b>${sender}:</b> ${text}`;
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  // expose function globally so HTML onclick works
+  window.sendMessage = sendMessage;
+});
+</script>
+
+
+
     </aside>
 
     <!-- CENTER: Document list -->
@@ -149,200 +239,381 @@
 
     <!-- RIGHT: Upload panel -->
     <aside class="right">
-      <div class="card">
+      <div class="card" id="uploadCard">
         <h3>📤 Upload Document</h3>
-        <form id="uploadForm">
+        <form id="uploadForm" enctype="multipart/form-data">
           <input type="text" class="input" name="title" placeholder="Document title (optional)" />
           <textarea class="input" name="description" rows="2" placeholder="Description (optional)"></textarea>
-          <select class="input" name="department">
+
+          <!-- Department (maps to backend 'department' param) -->
+          <select class="input" name="department" id="departmentSelect">
             <option>Administration</option>
+            <option>Operations</option>
             <option>Engineering</option>
+            <option>Maintenance</option>
+            <option>Systems (Signalling & Telecom)</option>
+            <option>Electrical</option>
+            <option>Civil</option>
+            <option>Rolling Stock</option>
             <option>Finance</option>
-            <option>HR</option>
+            <option>Human Resources</option>
+            <option>IT</option>
+            <option>Security</option>
           </select>
-          <select class="input" name="accessRole">
-            <option>All Employees</option>
-            <option>Managers</option>
-            <option>HR Executive</option>
-          </select>
+
+          <!-- Access Role checkboxes -->
+          <h3 style="margin-top:0.25rem">Access Roles</h3>
+          <div id="accessRolesCheckboxes">
+            <label><input type="checkbox" name="accessRole" value="All Employees"> All Employees</label><br>
+            <label><input type="checkbox" name="accessRole" value="Managers"> Managers</label><br>
+            <label><input type="checkbox" name="accessRole" value="HR Executive"> HR Executive</label><br>
+            <label><input type="checkbox" name="accessRole" value="Engineers"> Engineers</label><br>
+            <label><input type="checkbox" name="accessRole" value="Technicians"> Technicians</label><br>
+            <label><input type="checkbox" name="accessRole" value="Supervisors"> Supervisors</label><br>
+            <label><input type="checkbox" name="accessRole" value="Operators"> Operators</label><br>
+            <label><input type="checkbox" name="accessRole" value="Maintenance Staff"> Maintenance Staff</label><br>
+            <label><input type="checkbox" name="accessRole" value="Finance Officers"> Finance Officers</label><br>
+            <label><input type="checkbox" name="accessRole" value="IT Support"> IT Support</label><br>
+            <label><input type="checkbox" name="accessRole" value="Security Personnel"> Security Personnel</label><br>
+          </div>
+          <small>Select the roles who can access this document</small>
+
           <input type="file" class="input" name="file" />
-          <button type="submit" class="btn">Upload </button>
+          <button type="submit" class="btn">Upload</button>
         </form>
         <div id="uploadStatus" class="small" style="margin-top:8px; color:green;"></div>
+      </div>
+
+      <div class="card" id="pushNotificationCard">
+        <h3>📢 Push Notification</h3>
+        <form id="notifyForm">
+          <textarea class="input" name="message" rows="2" placeholder="Write a notification..."></textarea>
+          <button type="submit" class="btn">Send Notification</button>
+        </form>
+        <div id="notifyStatus" class="small" style="margin-top:8px; color:green;"></div>
       </div>
     </aside>
   </div>
 
 <script>
-const API_BASE = "http://127.0.0.1:8000";
-const token = localStorage.getItem("token");
-const username = localStorage.getItem("username") || "User";
+document.addEventListener("DOMContentLoaded", () => {
+  const API_BASE = "http://127.0.0.1:8000";
+  const token = localStorage.getItem("token");
+  const username = localStorage.getItem("username") || "User";
+  const SENIOR_ROLES = [
+    "Assistant Manager",
+    "Manager",
+    "Deputy General Manager",
+    "General Manager",
+    "Addl. General Manager (Operations & Maintenance)",
+    "Admin"
+  ];
 
-let currentUser = username; // default
+  let currentUser = username; // fallback
 
-/* DOM */
-const greet = document.getElementById("greet");
-const logoutBtn = document.getElementById("logoutBtn");
-const empName = document.getElementById("empName");
-const empId = document.getElementById("empId");
-const empDept = document.getElementById("empDept");
-const empRole = document.getElementById("empRole");
-
-if (!token) {
-  window.location.href = "login.html";
-} else {
-  greet.innerText = `📂 Dashboard - ${username}`;
-}
-
-logoutBtn.addEventListener("click", ()=>{
-  localStorage.removeItem("token");
-  localStorage.removeItem("username");
-  window.location.href = "login.html";
-});
-
-/* Fetch employee details */
-async function loadEmployeeDetails(){
-  try {
-    const res = await fetch(`${API_BASE}/auth/me`, { headers: { "Authorization": "Bearer " + token } });
-    if(res.ok){
-      const u = await res.json();
-      empName.innerText = u.full_name || u.username || username;
-      empId.innerText = u.id || u.employee_id || "--";
-      empDept.innerText = u.department || "--";
-      empRole.innerText = u.role || "--";
-      currentUser = u.username || username; // ✅ store actual username
-    }
-  } catch(err){ console.warn("Employee details error:", err); }
-}
-
-/* Notifications */
-async function loadNotifications(){
+  /* DOM references */
+  const greet = document.getElementById("greet");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const empName = document.getElementById("empName");
+  const empId = document.getElementById("empId");
+  const empRole = document.getElementById("empRole");
+  const docsTbody = document.getElementById("docsTbody");
   const notificationsEl = document.getElementById("notifications");
-  if(!notificationsEl) return;
-  try {
-    const res = await fetch(`${API_BASE}/notifications`, {
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-    if(!res.ok){
-      notificationsEl.innerHTML = `<div class="note">Failed to load notifications</div>`;
-      return;
-    }
-    const list = await res.json();
-    notificationsEl.innerHTML = "";
-    if(!Array.isArray(list) || list.length === 0){
-      notificationsEl.innerHTML = `<div class="note">No new notifications</div>`;
-      return;
-    }
-    list.slice(0,6).forEach(n => {
-      const msg = (typeof n === "string") ? n : (n.message || n.detail || JSON.stringify(n));
-      const div = document.createElement("div");
-      div.className = "note";
-      div.textContent = msg;
-      notificationsEl.appendChild(div);
-    });
-  } catch(err){
-    console.warn("Notifications error:", err);
-    notificationsEl.innerHTML = `<div class="note">No new notifications</div>`;
-  }
-}
+  const uploadForm = document.getElementById("uploadForm");
+  const uploadStatus = document.getElementById("uploadStatus");
+  const departmentSelect = document.getElementById("departmentSelect");
+  const uploadCard = document.getElementById("uploadCard");
+  const notifyForm = document.getElementById("notifyForm");
+  const notifyStatus = document.getElementById("notifyStatus");
 
-/* Documents */
-let allDocs = [];
-async function fetchDocuments(){
-  const docsTbody = document.getElementById("docsTbody");
-  docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">Loading…</td></tr>`;
-  try {
-    const res = await fetch(`${API_BASE}/documents/list`, { headers: { "Authorization": "Bearer " + token } });
-    if(!res.ok){ docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">Failed to load documents</td></tr>`; return; }
-    allDocs = await res.json();
-    renderDocs(allDocs);
-  } catch(err){ docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">Network error</td></tr>`; }
-}
-
-function renderDocs(docs){
-  const docsTbody = document.getElementById("docsTbody");
-  docsTbody.innerHTML = "";
-  if(!docs.length){
-    docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">No documents uploaded yet.</td></tr>`;
+  if (!token) {
+    window.location.href = "login.html";
     return;
+  } else if (greet) {
+    greet.innerText = `📂 Dashboard - ${username}`;
   }
-  docs.forEach(d=>{
-    let date = d.uploaded_at?.split("T")[0] || "--";
 
-    let actionBtns = `<a href="document.html?id=${d.id}" target="_blank">Open</a>`;
-    if ((d.uploaded_by || "").toLowerCase() === (currentUser || "").toLowerCase()) {
-      actionBtns += `<br><a href="#" onclick="deleteDoc(${d.id}); return false;" style="color:red;">Delete</a>`;
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      window.location.href = "login.html";
+    });
+  }
+
+  /* Fetch employee details */
+  async function loadEmployeeDetails() {
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        headers: { "Authorization": "Bearer " + token }
+      });
+      if (res.ok) {
+        const u = await res.json();
+        if (empName) empName.innerText = u.full_name || u.username || username;
+        if (empId) empId.innerText = u.id || u.employee_id || "--";
+        if (empRole) empRole.innerText = u.role || "--";
+        currentUser = u.username || username;
+        localStorage.setItem("userRole", u.role || "Employee");
+
+        // Set department select value to user's department/role if any
+        // (we set department to user's role for convenience)
+        if (departmentSelect && u.role) {
+          // try to select a matching department option if exists
+          const options = Array.from(departmentSelect.options).map(o => o.value.toLowerCase());
+          const roleLower = (u.role || "").toLowerCase();
+          const idx = options.indexOf(roleLower);
+          if (idx >= 0) departmentSelect.selectedIndex = idx;
+        }
+
+        // show/hide upload card if user is senior
+        if (uploadCard) {
+          const isSenior = SENIOR_ROLES.includes(u.role);
+          uploadCard.style.display = isSenior ? "" : "none";
+        }
+      } else {
+        console.warn("Failed to fetch /auth/me", res.status);
+      }
+    } catch (err) {
+      console.warn("Employee details error:", err);
+    }
+  }
+
+  /* Notifications - try backend, fallback to hardcoded */
+  async function loadNotifications() {
+    if (!notificationsEl) return;
+    try {
+      const res = await fetch(`${API_BASE}/documents/notifications`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error("bad response " + res.status);
+
+      const list = await res.json();
+      notificationsEl.innerHTML = "";
+      if (!Array.isArray(list) || list.length === 0) {
+        notificationsEl.innerHTML = `<div class="note">No new notifications</div>`;
+        return;
+      }
+      list.slice(0,6).forEach(n => {
+        const msg = (typeof n === "string") ? n : (n.message || n.detail || JSON.stringify(n));
+        const div = document.createElement("div");
+        div.className = "note";
+        div.textContent = msg;
+        notificationsEl.appendChild(div);
+      });
+    } catch (err) {
+      console.warn("Notifications failed, using fallback:", err);
+      // fallback
+      const hardcodedList = [
+        "📢 New document uploaded by HR Department",
+        "✅ Your file has been approved",
+        "⚠️ Pending review on your last upload"
+      ];
+      notificationsEl.innerHTML = "";
+      hardcodedList.slice(0,6).forEach(msg => {
+        const div = document.createElement("div");
+        div.className = "note";
+        div.textContent = msg;
+        notificationsEl.appendChild(div);
+      });
+    }
+  }
+
+  /* Documents */
+  let allDocs = [];
+  async function fetchDocuments() {
+    if (!docsTbody) return;
+    docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">Loading…</td></tr>`;
+    try {
+      const res = await fetch(`${API_BASE}/documents/documents/list`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">Failed to load documents</td></tr>`;
+        return;
+      }
+      allDocs = await res.json();
+      renderDocs(allDocs);
+    } catch (err) {
+      console.warn("fetchDocuments error:", err);
+      docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">Network error</td></tr>`;
+    }
+  }
+
+  function renderDocs(docs) {
+    if (!docsTbody) return;
+    docsTbody.innerHTML = "";
+    if (!docs || !docs.length) {
+      docsTbody.innerHTML = `<tr><td class="no-data" colspan="6">No documents uploaded yet.</td></tr>`;
+      return;
+    }
+    docs.forEach(d => {
+      let date = d.uploaded_at?.split("T")[0] || "--";
+      let actionBtns = `<a href="document.html?id=${d.id}" target="_blank">Open</a>`;
+      if ((d.uploaded_by || "").toLowerCase() === (currentUser || "").toLowerCase()) {
+        actionBtns += `<br><a href="#" onclick="deleteDoc(${d.id}); return false;" style="color:red;">Delete</a>`;
+      }
+
+      docsTbody.innerHTML += `
+        <tr>
+          <td>${escapeHtml(d.title || d.filename || "Unnamed")}</td>
+          <td>${escapeHtml(d.department || "—")}</td>
+          <td>${escapeHtml(d.access_role || "—")}</td>
+          <td>${escapeHtml(d.uploaded_by || "—")}</td>
+          <td>${escapeHtml(date)}</td>
+          <td>${actionBtns}</td>
+        </tr>
+      `;
+    });
+  }
+
+  /* Delete */
+  window.deleteDoc = async function(docId) {
+    if (!confirm("Delete this document?")) return;
+    let res;
+    try {
+      res = await fetch(`${API_BASE}/documents/delete/${docId}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+    } catch (err) {
+      console.warn("DELETE failed:", err);
     }
 
-    docsTbody.innerHTML += `
-      <tr>
-        <td>${escapeHtml(d.title || d.filename || "Unnamed")}</td>
-        <td>${escapeHtml(d.department || "—")}</td>
-        <td>${escapeHtml(d.access || "—")}</td>
-        <td>${escapeHtml(d.uploaded_by || "—")}</td>
-        <td>${escapeHtml(date)}</td>
-        <td>${actionBtns}</td>
-      </tr>
-    `;
-  });
-}
+    if (!res || !res.ok) {
+      try {
+        res = await fetch(`${API_BASE}/documents/documents/delete/${docId}`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+        });
+      } catch (err2) {
+        console.warn("Fallback delete failed:", err2);
+      }
+    }
 
-async function deleteDoc(docId) {
-  let res;
-  try {
-    res = await fetch(`${API_BASE}/documents/delete/${docId}`, {
-      method: "DELETE",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json"
+    if (res && res.ok) {
+      alert("✅ Document deleted successfully");
+      fetchDocuments();
+    } else {
+      let errMsg = "Unexpected error";
+      try {
+        const err = await res.json();
+        errMsg = err.detail || JSON.stringify(err);
+      } catch (_) {}
+      alert("❌ Failed to delete: " + errMsg);
+    }
+  };
+
+  /* Upload */
+  if (uploadForm) {
+    uploadForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const fd = new FormData(uploadForm);
+
+      // collect accessRole checkbox values
+      const checked = Array.from(uploadForm.querySelectorAll('input[name="accessRole"]:checked'))
+                           .map(cb => cb.value);
+      const rolesToSend = checked.length ? checked : ["All Employees"];
+      // backend expects form field 'access_role' (we send JSON string)
+      fd.set("access_role", JSON.stringify(rolesToSend));
+
+      // department field is already present as 'department' (select)
+      // send file and other fields as-is
+      try {
+        uploadStatus.textContent = "Uploading…";
+        const res = await fetch(`${API_BASE}/documents/documents/upload`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`
+          },
+          body: fd
+        });
+        if (res.ok) {
+          uploadStatus.style.color = "green";
+          uploadStatus.textContent = "✅ File uploaded successfully!";
+          uploadForm.reset();
+          fetchDocuments();
+          loadNotifications();
+        } else {
+          uploadStatus.style.color = "crimson";
+          const err = await res.json().catch(()=>({}));
+          uploadStatus.textContent = "❌ Upload failed: " + (err.detail || res.status);
+        }
+      } catch (err) {
+        uploadStatus.style.color = "crimson";
+        uploadStatus.textContent = "⚠️ Error: " + err.message;
       }
     });
-  } catch (err) {
-    console.warn("DELETE failed, retrying with POST:", err);
   }
 
-  // Retry with POST if DELETE is blocked or failed
-  if (!res || !res.ok) {
-    res = await fetch(`${API_BASE}/documents/delete/${docId}`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json"
+  /* Push notification form - only show if senior role in localStorage (frontend convenience) */
+  if (notifyForm) {
+    notifyForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const message = (new FormData(notifyForm)).get("message") || "";
+      if (!message.trim()) {
+        notifyStatus.style.color = "crimson";
+        notifyStatus.textContent = "Please write a message.";
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/documents/notifications/push`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message })
+        });
+        if (res.ok) {
+          notifyStatus.style.color = "green";
+          notifyStatus.textContent = "✅ Notification sent";
+          notifyForm.reset();
+          loadNotifications();
+        } else {
+          const err = await res.json().catch(()=>({}));
+          notifyStatus.style.color = "crimson";
+          notifyStatus.textContent = "❌ Failed: " + (err.detail || res.status);
+        }
+      } catch (err) {
+        notifyStatus.style.color = "crimson";
+        notifyStatus.textContent = "⚠️ Error: " + err.message;
       }
     });
   }
 
-  if (res.ok) {
-    alert("✅ Document deleted successfully");
-    location.reload();
-  } else {
-    let errMsg = "Unexpected error";
-    try {
-      const err = await res.json();
-      errMsg = err.detail || JSON.stringify(err);
-    } catch (_) {}
-    alert("❌ Failed to delete: " + errMsg);
+  /* Search */
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      const v = e.target.value.toLowerCase();
+      const filtered = allDocs.filter(d =>
+        (d.title || "").toLowerCase().includes(v) ||
+        (d.department || "").toLowerCase().includes(v) ||
+        (d.access_role || "").toLowerCase().includes(v)
+      );
+      renderDocs(filtered);
+    });
   }
-}
 
+  function escapeHtml(str) {
+    return String(str || "").replace(/[&<>"']/g, m=>(
+      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
+    ));
+  }
 
+  /* Init */
+  (async function init(){
+    await loadEmployeeDetails();
+    await loadNotifications();
+    await fetchDocuments();
+  })();
 
-/* Search */
-document.getElementById("searchInput").addEventListener("input", (e)=>{
-  const val = e.target.value.toLowerCase();
-  const filtered = allDocs.filter(d=> 
-    (d.title||"").toLowerCase().includes(val) || 
-    (d.department||"").toLowerCase().includes(val)
-  );
-  renderDocs(filtered);
 });
-
-function escapeHtml(str){ return String(str||"").replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-/* Init */
-loadEmployeeDetails();
-loadNotifications();
-fetchDocuments();
 </script>
+
 </body>
 </html>

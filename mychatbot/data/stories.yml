@@ -1,0 +1,32 @@
+version: "3.1"
+
+stories:
+- story: greet and respond
+  steps:
+    - intent: greet
+    - action: utter_greet
+
+- story: role info
+  steps:
+    - intent: role_info
+    - action: utter_role_info
+
+- story: task help
+  steps:
+    - intent: task_help
+    - action: utter_task_help
+
+- story: report inconvenience
+  steps:
+    - intent: inconvenience_report
+    - action: utter_inconvenience_report
+
+- story: goodbye
+  steps:
+    - intent: goodbye
+    - action: utter_goodbye
+
+- story: bot challenge
+  steps:
+    - intent: bot_challenge
+    - action: utter_iamabot
