@@ -1,67 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Register - KMRL</title>
-  <style>
-    body { margin:0; display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(to right,#005baa,#0077cc); font-family:Arial,sans-serif; }
-    .register-container { background:#fff; padding:40px; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,.2); text-align:center; width:360px; }
-    .register-title { color:#005baa; margin-bottom:10px; }
-    .register-subtitle { font-size:16px; color:#444; margin-bottom:20px; }
-    .register-form input, .register-form select { width:100%; padding:12px; margin:10px 0; border:1px solid #ccc; border-radius:8px; font-size:14px; }
-    .register-btn { width:100%; padding:12px; background:#005baa; color:#fff; border:none; border-radius:8px; font-size:16px; cursor:pointer; transition:.3s; }
-    .register-btn:hover { background:#004080; }
-    .register-footer { margin-top:15px; font-size:14px; }
-    .register-footer a { color:#005baa; text-decoration:none; }
-    .register-footer a:hover { text-decoration:underline; }
-    #message { margin-top:10px; font-size:14px; color:red; white-space:pre-wrap; text-align:left; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Register - KMRL</title>
+    <style>
+        * {
+            font-family: "IBM Plex Serif", serif;
+            font-weight: 650;
+            font-style: normal;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            width: 1000px;
+            height: 710px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); /* Adds a subtle shadow to the main container */
+            overflow: hidden;
+            transition: transform .2s;
+        }
+        .container:hover {
+            transform: scale(1.04);
+        }
+            
+
+
+        .side-panel {
+            flex: 1;
+            color: #fff;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .left-bg-panel {
+            background: linear-gradient(rgba(45, 126, 172, 0.8), rgba(45, 126, 172, 0.8)), url('img/1stside.png');
+        }
+
+        .left-bg-panel h1 {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .left-bg-panel h2 {
+            font-size: 2em;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+
+        .login-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .form-container h2 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+            margin-top: 15px;
+            color: #333;
+        }
+
+        .form-container p {
+            color: #888;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box;
+            transition: box-shadow 0.3s ease, border-color 0.3s ease; /* Smooth transition for focus effect */
+            font-weight: 500;
+        }
+
+        .input-group input::placeholder {
+            color: #aaa;
+        }
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 5px rgba(74, 144, 226, 0.5); /* Adds a blue glow on focus */
+            outline: none;
+        }
+
+        .input-group input:hover{
+                    box-shadow: 0 0 0 3px rgba(59, 89, 152, 0.2);
+                }
+        .register-button {
+            width: 100%;
+            padding: 15px;
+            background-color: #4a90e2;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transition for hover effects */
+        }
+
+        .register-button:hover {
+            background-color: #357ABD;
+            transform: translateY(-2px); /* Lifts the button slightly on hover */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Adds a shadow on hover */
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .login-link a {
+            color: #4a90e2;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease, text-decoration 0.3s ease; /* Smooth transition for link hover */
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+            color: #357ABD;
+        }
+    </style>
 </head>
 <body>
-  <div class="register-container">
-    <h1 class="register-title">KMRL SmartDocs</h1>
-    <h2 class="register-subtitle">Create a new account</h2>
-
-    <form id="registerForm" class="register-form" autocomplete="off">
-      <input type="text" id="username" placeholder="Username" required />
-      <input type="text" id="full_name" placeholder="Full Name" required />
-      <input type="email" id="email" placeholder="Email" required />
-      <input type="password" id="password" placeholder="Password" required />
-
-      <select id="role" required>
-  <option value="">Select Role</option>
-  <option value="Assistant Manager">Assistant Manager</option>
-  <option value="Manager">Manager</option>
-  <option value="Deputy General Manager">Deputy General Manager</option>
-  <option value="General Manager">General Manager</option>
-  <option value="Executive">Executive</option>
-  <option value="Junior Engineer">Junior Engineer</option>
-  <option value="Station Controller">Station Controller</option>
-  <option value="Apprentice">Apprentice</option>
-  <option value="Additional Section Engineer (Power & Traction)">Additional Section Engineer (Power & Traction)</option>
-  <option value="Addl. General Manager (Operations & Maintenance)">Addl. General Manager (Operations & Maintenance)</option>
-  <option value="Executive (Civil) – Water Transport">Executive (Civil) – Water Transport</option>
-  <option value="Executive (Marine)">Executive (Marine)</option>
-  <option value="Safety Officer">Safety Officer</option>
-  <option value="Finance Officer">Finance Officer</option>
-  <option value="HR Executive">HR Executive</option>
-  <option value="Admin">Admin</option>
-</select>
-
-
-      <button type="submit" class="register-btn">Register</button>
-    </form>
-
-    <p class="register-footer">
-      Already have an account? <a href="/login.html">Login</a>
-    </p>
-
-    <pre id="message"></pre>
-  </div>
+  <div class="container register-container">
+        <div class="side-panel left-bg-panel">
+            <div class="content">
+                <h1>NAMASKARAM 👋</h1>
+                <h2>Welcome!</h2>
+            </div>
+        </div>
+        <div class="login-panel">
+            <div class="form-container">
+                <h2 class="register-title">Register</h2>
+                <p class="register-subtitle">Create your new account</p>
+                <form id="registerForm" class="register-form" autocomplete="off">
+                    <div class="input-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="Username" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="full_name">Full Name</label>
+                        <input type="text" id="full_name" name="fullname" placeholder="Full Name" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" placeholder="Email" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Password" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="role">Role</label>
+                        <select id="role" required>
+                            <option value="">Select Role</option>
+                            <option value="Assistant Manager">Assistant Manager</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Deputy General Manager">Deputy General Manager</option>
+                            <option value="General Manager">General Manager</option>
+                            <option value="Executive">Executive</option>
+                            <option value="Junior Engineer">Junior Engineer</option>
+                            <option value="Station Controller">Station Controller</option>
+                            <option value="Apprentice">Apprentice</option>
+                            <option value="Additional Section Engineer (Power & Traction)">Additional Section Engineer (Power & Traction)</option>
+                            <option value="Addl. General Manager (Operations & Maintenance)">Addl. General Manager (Operations & Maintenance)</option>
+                            <option value="Executive (Civil) – Water Transport">Executive (Civil) – Water Transport</option>
+                            <option value="Executive (Marine)">Executive (Marine)</option>
+                            <option value="Safety Officer">Safety Officer</option>
+                            <option value="Finance Officer">Finance Officer</option>
+                            <option value="HR Executive">HR Executive</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="register-btn register-button">Register</button>
+                </form>
+                <p class="register-footer login-link">
+                    Already have an account? <a href="/login.html">Login here!</a>
+                </p>
+                <pre id="message"></pre>
+            </div>
+        </div>
+    </div>
 
   <script>
   const msg = document.getElementById("message");

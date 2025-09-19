@@ -5,95 +5,210 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>KMRL SmartDocs - Dashboard</title>
 <style>
-  :root{
-    --primary:#005baa;
-    --muted:#6b7280;
-    --card:#ffffff;
-    --bg:#f5f7fa;
+  :root {
+    --primary: #2596BE;
+    --secondary: #92cce8;
+    --muted: #6b7280;
+    --accent: #bfe2f2;
+    --soft: #B1D5E6;
+    --bg-light: rgb(208,246,233);
   }
-  *{box-sizing:border-box}
-  body{ margin:0; font-family:Inter, Arial, sans-serif; background:var(--bg); color:#111; }
+
+  body {
+    background: url("/img/blue.png") no-repeat center center fixed;
+    margin: 0;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #111;
+    position: relative;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background with blur layers */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url("inm/blue.png") center/cover no-repeat;
+    filter: blur(18px) brightness(0.9);
+    z-index: -3;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(146,204,232,0.3), rgba(191,226,242,0.3));
+    backdrop-filter: blur(8px);
+    z-index: -2;
+  }
 
   /* Topbar */
-  .topbar{
-    display:flex; justify-content:space-between; align-items:center;
-    padding:14px 20px; background:var(--primary); color:white;
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+    animation: slideDown 0.6s ease;
   }
-  .topbar .greet{ font-size:16px; font-weight:500; }
-  .topbar button{ background:white; color:var(--primary); border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+  .topbar .greet { font-size: 16px; font-weight: 600; letter-spacing: 0.3px; }
+  .topbar button {
+    background: white;
+    color: var(--primary);
+    border: none;
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s, background 0.3s;
+  }
+  .topbar button:hover {
+    background: var(--accent);
+    transform: scale(1.05);
+  }
 
-  /* Container grid: left | center | right */
-  .container{
+  /* Container grid */
+  .container {
     display: grid;
-    grid-template-columns: 300px 1fr 340px; /* left column + main area + right column */
-    gap: 18px;
-    padding:18px;
-    min-height: calc(100vh - 58px);
-    align-items:start;
+    grid-template-columns: 300px 1fr 340px;
+    gap: 20px;
+    padding: 20px;
+    min-height: calc(100vh - 60px);
+    align-items: start;
+    animation: fadeIn 0.9s ease-in;
   }
 
-  /* Left sidebar */
-  .left { display:flex; flex-direction:column; gap:12px; }
-  .card{ background:var(--card); border-radius:10px; padding:14px; box-shadow:0 6px 18px rgba(10,20,40,0.06); }
-  .left .card{ flex-shrink:0; }
-
-  .card h3{ margin:0 0 8px 0; color:var(--primary); font-size:15px; }
-  .small{ font-size:13px; color:var(--muted) }
-
-  /* Center */
-  .center { overflow:auto; display:flex; flex-direction:column; gap:12px; }
-  .center .card{ padding:12px 14px; }
-
-  table{ width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow:0 3px 10px rgba(0,0,0,0.06); }
-  th,td{ padding:12px 10px; text-align:left; border-bottom:1px solid #eee; font-size:14px; }
-  th{ background:#f3f4f6; color:#222; font-weight:600; }
-  .no-data { padding:18px; text-align:center; color:var(--muted) }
-
-  /* Right sidebar */
-  .right { display:flex; flex-direction:column; gap:12px; }
-  .input, select, textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #e6e6e6; font-size:14px; margin-bottom:10px; }
-  .btn{ background:var(--primary); color:white; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:500; width:100%; }
-
-  /* Notifications & Chat placeholder (theme-consistent) */
-  .notifications {
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    max-height:160px;
-    overflow-y:auto;
-    padding-top:4px;
+  /* Card styling */
+  .card {
+    background: rgba(255,255,255,0.75);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+    backdrop-filter: blur(12px);
+    transition: transform 0.2s, box-shadow 0.3s;
+    animation: popIn 0.5s ease;
   }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.15);
+  }
+  .card h3 {
+    margin: 0 0 10px;
+    color: var(--primary);
+    font-size: 15px;
+    font-weight: 600;
+  }
+  .small { font-size: 13px; color: var(--muted); }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.8);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  }
+  th,td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+  }
+  th {
+    background: var(--soft);
+    color: #222;
+    font-weight: 600;
+  }
+  tr:hover td { background: rgba(191,226,242,0.25); transition: background 0.3s; }
+  .no-data { padding: 18px; text-align: center; color: var(--muted); }
+
+  /* Buttons + inputs */
+  .input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #d0e6f0;
+    font-size: 14px;
+    margin-bottom: 10px;
+    background: #fff;
+    transition: border 0.3s, box-shadow 0.3s;
+  }
+  .input:focus, select:focus, textarea:focus {
+    border: 1px solid var(--primary);
+    box-shadow: 0 0 0 3px rgba(146,204,232,0.4);
+    outline: none;
+  }
+  .btn {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    width: 100%;
+    transition: transform 0.2s, opacity 0.3s;
+  }
+  .btn:hover { transform: scale(1.05); opacity: 0.9; }
+
+  /* Notifications */
   .note {
-    background:#eef6ff;
-    border-left:4px solid var(--primary);
-    padding:8px;
-    border-radius:6px;
-    font-size:14px;
+    background: var(--accent);
+    border-left: 5px solid var(--primary);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
     color: #0b3b66;
+    animation: fadeInUp 0.4s ease;
   }
-  .chat-placeholder {
-    background:#f3f4f6;
-    padding:14px;
-    border-radius:8px;
-    min-height:120px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:var(--muted);
-    font-size:14px;
+
+  /* Chatbox */
+  #chatbot {
+    display: flex;
+    flex-direction: column;
+    height: 300px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.7);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    backdrop-filter: blur(10px);
   }
+  #chat-header {
+    background: var(--primary);
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 12px 12px 0 0;
+    font-size: 14px;
+  }
+  #chat-body { flex: 1; overflow-y: auto; padding: 10px; font-size: 13px; }
+  #chat-input {
+    border: none;
+    border-top: 1px solid #ddd;
+    padding: 10px;
+    font-size: 13px;
+    border-radius: 0 0 12px 12px;
+    outline: none;
+  }
+
+  /* Animations */
+  @keyframes fadeIn { from {opacity:0; transform:translateY(8px);} to {opacity:1; transform:translateY(0);} }
+  @keyframes slideDown { from {transform:translateY(-50px); opacity:0;} to {transform:translateY(0); opacity:1;} }
+  @keyframes popIn { from {transform:scale(0.95); opacity:0;} to {transform:scale(1); opacity:1;} }
+  @keyframes fadeInUp { from {transform:translateY(10px); opacity:0;} to {transform:translateY(0); opacity:1;} }
 
   @media (max-width:1000px){
-    .container{
-      grid-template-columns: 1fr; /* stack vertically on small screens */
-      padding:12px;
-    }
-    .left, .right { width:100%; }
+    .container { grid-template-columns: 1fr; padding: 12px; }
   }
-  /* small checkbox styling for neatness */
-  #accessRolesCheckboxes label { display:inline-block; margin-bottom:6px; font-size:14px; }
-  #accessRolesCheckboxes input { margin-right:8px; vertical-align:middle; }
 </style>
+
 </head>
 <body>
   <div class="topbar">
@@ -109,14 +224,14 @@
         <div><strong id="empName">--</strong></div>
         <div class="small">ID: <span id="empId">--</span></div>
         <div class="small">Role: <span id="empRole">--</span></div>
-      </div>
+      </div><br>
 
       <div class="card">
         <h3>Notifications</h3>
         <div class="notifications" id="notifications">
           <div class="note">Loading notifications…</div>
         </div>
-      </div>
+      </div><br>
 
 <div class="card">
   <div id="chatbot">
@@ -132,12 +247,12 @@
   display: flex;
   flex-direction: column;
   height: 300px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #2596BE;
   border-radius: 8px;
   background: #fff;
 }
 #chat-header {
-  background: var(--primary);
+  background-color: #2596BE;
   color: white;
   padding: 8px;
   font-weight: bold;
@@ -262,27 +377,124 @@ document.addEventListener("DOMContentLoaded", () => {
           </select>
 
           <!-- Access Role checkboxes -->
-          <h3 style="margin-top:0.25rem">Access Roles</h3>
-          <div id="accessRolesCheckboxes">
-            <label><input type="checkbox" name="accessRole" value="All Employees"> All Employees</label><br>
-            <label><input type="checkbox" name="accessRole" value="Managers"> Managers</label><br>
-            <label><input type="checkbox" name="accessRole" value="HR Executive"> HR Executive</label><br>
-            <label><input type="checkbox" name="accessRole" value="Engineers"> Engineers</label><br>
-            <label><input type="checkbox" name="accessRole" value="Technicians"> Technicians</label><br>
-            <label><input type="checkbox" name="accessRole" value="Supervisors"> Supervisors</label><br>
-            <label><input type="checkbox" name="accessRole" value="Operators"> Operators</label><br>
-            <label><input type="checkbox" name="accessRole" value="Maintenance Staff"> Maintenance Staff</label><br>
-            <label><input type="checkbox" name="accessRole" value="Finance Officers"> Finance Officers</label><br>
-            <label><input type="checkbox" name="accessRole" value="IT Support"> IT Support</label><br>
-            <label><input type="checkbox" name="accessRole" value="Security Personnel"> Security Personnel</label><br>
-          </div>
-          <small>Select the roles who can access this document</small>
+          <h3 style="margin-top:0.25rem">Give Access To</h3>
+          <style>
+/* Dropdown container */
+.dropdown {
+  position: relative;
+  display: inline-block;
+  width: 280px;
+  font-family: Arial, sans-serif;
+}
+
+/* Button style */
+.dropdown-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #f9f9f9;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.3s;
+}
+
+.dropdown-btn:hover {
+  background-color: #f0f0f0;
+}
+
+/* Dropdown content */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 5px;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  animation: fadeIn 0.2s ease-in-out;
+  padding: 10px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Show dropdown */
+.dropdown.active .dropdown-content {
+  display: block;
+}
+
+/* Label styling */
+.dropdown-content label {
+  display: block;
+  padding: 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdown-content label:hover {
+  background-color: #f0f8ff;
+}
+</style>
+
+<div class="dropdown" id="roleDropdown">
+  <div class="dropdown-btn">Select Access Roles ▼</div>
+  <div class="dropdown-content">
+    <label><input type="checkbox" name="accessRole" value="All Employees"> All Employees</label>
+    <label><input type="checkbox" name="accessRole" value="Managers"> Managers</label>
+    <label><input type="checkbox" name="accessRole" value="HR Executive"> HR Executive</label>
+    <label><input type="checkbox" name="accessRole" value="Engineers"> Engineers</label>
+    <label><input type="checkbox" name="accessRole" value="Technicians"> Technicians</label>
+    <label><input type="checkbox" name="accessRole" value="Supervisors"> Supervisors</label>
+    <label><input type="checkbox" name="accessRole" value="Operators"> Operators</label>
+    <label><input type="checkbox" name="accessRole" value="Maintenance Staff"> Maintenance Staff</label>
+    <label><input type="checkbox" name="accessRole" value="Finance Officers"> Finance Officers</label>
+    <label><input type="checkbox" name="accessRole" value="IT Support"> IT Support</label>
+    <label><input type="checkbox" name="accessRole" value="Security Personnel"> Security Personnel</label>
+  </div>
+</div>
+
+<script>
+const dropdown = document.getElementById("roleDropdown");
+const btn = dropdown.querySelector(".dropdown-btn");
+const checkboxes = dropdown.querySelectorAll("input[type='checkbox']");
+
+// Toggle dropdown open/close
+btn.addEventListener("click", () => {
+  dropdown.classList.toggle("active");
+});
+
+// Update button text with selected roles
+checkboxes.forEach(cb => {
+  cb.addEventListener("change", () => {
+    const selected = Array.from(checkboxes)
+      .filter(c => c.checked)
+      .map(c => c.value);
+    btn.textContent = selected.length > 0
+      ? selected.join(", ")
+      : "Select Access Roles ▼";
+  });
+});
+</script>
+
+          <small>Select the roles who can access this document</small><br><br>
 
           <input type="file" class="input" name="file" />
           <button type="submit" class="btn">Upload</button>
         </form>
         <div id="uploadStatus" class="small" style="margin-top:8px; color:green;"></div>
-      </div>
+      </div><br>
 
       <div class="card" id="pushNotificationCard">
         <h3>📢 Push Notification</h3>
@@ -472,7 +684,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!confirm("Delete this document?")) return;
     let res;
     try {
-      res = await fetch(`${API_BASE}/documents/delete/${docId}`, {
+      res = await fetch(`${API_BASE}/documents/documents/delete/${docId}`, {
         method: "DELETE",
         headers: {
           "Authorization": `Bearer ${localStorage.getItem("token")}`

@@ -182,7 +182,6 @@
 
   // ---- Summary ----
   async function summarizeDoc() {
-    if (!currentDoc) return alert("⚠️ Summary unavailable");
 
     try {
       const res = await fetch(`http://127.0.0.1:8000/summarize/${docId}`);
